@@ -1,0 +1,77 @@
+
+> @better-auth/core@1.3.34 build /home/runner/work/better-auth/better-auth/packages/core
+> unbuild --clean
+
+[info] Building core
+[info] Cleaning dist directory: `./dist`
+Generated an empty chunk: "index".
+Generated an empty chunk: "db/adapter/index".
+Generated an empty chunk: "index".
+Generated an empty chunk: "db/adapter/index".
+"bun:sqlite" is imported by "src/types/init-options.ts", but could not be resolved – treating it as an external dependency.
+"node:sqlite" is imported by "src/types/init-options.ts", but could not be resolved – treating it as an external dependency.
+Export "ProviderOptions" of module "src/oauth2/oauth-provider.ts" was reexported through module "src/oauth2/index.ts" while both modules are dependencies of each other and will end up in different chunks by current Rollup settings. This scenario is not well supported at the moment as it will produce a circular dependency between chunks and will likely lead to broken execution order.
+Either change the import in "src/oauth2/create-authorization-url.ts" to point directly to the exporting module or reconfigure "output.manualChunks" to ensure these modules end up in the same chunk.
+Export "ProviderOptions" of module "src/oauth2/oauth-provider.ts" was reexported through module "src/oauth2/index.ts" while both modules are dependencies of each other and will end up in different chunks by current Rollup settings. This scenario is not well supported at the moment as it will produce a circular dependency between chunks and will likely lead to broken execution order.
+Either change the import in "src/oauth2/validate-authorization-code.ts" to point directly to the exporting module or reconfigure "output.manualChunks" to ensure these modules end up in the same chunk.
+Export "OAuthProvider" of module "src/oauth2/oauth-provider.ts" was reexported through module "src/oauth2/index.ts" while both modules are dependencies of each other and will end up in different chunks by current Rollup settings. This scenario is not well supported at the moment as it will produce a circular dependency between chunks and will likely lead to broken execution order.
+Either change the import in "src/types/context.ts" to point directly to the exporting module or reconfigure "output.manualChunks" to ensure these modules end up in the same chunk.
+Export "ProviderOptions" of module "src/oauth2/oauth-provider.ts" was reexported through module "src/oauth2/index.ts" while both modules are dependencies of each other and will end up in different chunks by current Rollup settings. This scenario is not well supported at the moment as it will produce a circular dependency between chunks and will likely lead to broken execution order.
+Either change the import in "src/oauth2/create-authorization-url.ts" to point directly to the exporting module or reconfigure "output.manualChunks" to ensure these modules end up in the same chunk.
+Export "ProviderOptions" of module "src/oauth2/oauth-provider.ts" was reexported through module "src/oauth2/index.ts" while both modules are dependencies of each other and will end up in different chunks by current Rollup settings. This scenario is not well supported at the moment as it will produce a circular dependency between chunks and will likely lead to broken execution order.
+Either change the import in "src/oauth2/validate-authorization-code.ts" to point directly to the exporting module or reconfigure "output.manualChunks" to ensure these modules end up in the same chunk.
+Export "OAuthProvider" of module "src/oauth2/oauth-provider.ts" was reexported through module "src/oauth2/index.ts" while both modules are dependencies of each other and will end up in different chunks by current Rollup settings. This scenario is not well supported at the moment as it will produce a circular dependency between chunks and will likely lead to broken execution order.
+Either change the import in "src/types/context.ts" to point directly to the exporting module or reconfigure "output.manualChunks" to ensure these modules end up in the same chunk.
+Export "ProviderOptions" of module "src/oauth2/oauth-provider.ts" was reexported through module "src/oauth2/index.ts" while both modules are dependencies of each other and will end up in different chunks by current Rollup settings. This scenario is not well supported at the moment as it will produce a circular dependency between chunks and will likely lead to broken execution order.
+Either change the import in "src/oauth2/create-authorization-url.ts" to point directly to the exporting module or reconfigure "output.manualChunks" to ensure these modules end up in the same chunk.
+Export "ProviderOptions" of module "src/oauth2/oauth-provider.ts" was reexported through module "src/oauth2/index.ts" while both modules are dependencies of each other and will end up in different chunks by current Rollup settings. This scenario is not well supported at the moment as it will produce a circular dependency between chunks and will likely lead to broken execution order.
+Either change the import in "src/oauth2/validate-authorization-code.ts" to point directly to the exporting module or reconfigure "output.manualChunks" to ensure these modules end up in the same chunk.
+Export "OAuthProvider" of module "src/oauth2/oauth-provider.ts" was reexported through module "src/oauth2/index.ts" while both modules are dependencies of each other and will end up in different chunks by current Rollup settings. This scenario is not well supported at the moment as it will produce a circular dependency between chunks and will likely lead to broken execution order.
+Either change the import in "src/types/context.ts" to point directly to the exporting module or reconfigure "output.manualChunks" to ensure these modules end up in the same chunk.
+[success] Build succeeded for core
+[log]   dist/index.cjs (total size: 15 B, chunk size: 15 B)
+
+[log]   dist/async_hooks/index.cjs (total size: 893 B, chunk size: 893 B, exports: getAsyncLocalStorage)
+
+[log]   dist/middleware/index.cjs (total size: 610 B, chunk size: 610 B, exports: createAuthEndpoint, createAuthMiddleware, optionsMiddleware)
+
+[log]   dist/utils/index.cjs (total size: 114 B, chunk size: 114 B, exports: defineErrorCodes)
+
+[log]   dist/error/index.cjs (total size: 1.75 kB, chunk size: 1.75 kB, exports: BASE_ERROR_CODES, BetterAuthError)
+
+[log]   dist/env/index.cjs (total size: 8.62 kB, chunk size: 8.62 kB, exports: ENV, TTY_COLORS, createLogger, env, getBooleanEnvVar, getColorDepth, getEnvVar, isDevelopment, isProduction, isTest, levels, logger, nodeENV, shouldPublishLog)
+
+[log]   dist/oauth2/index.cjs (total size: 10.3 kB, chunk size: 10.3 kB, exports: clientCredentialsToken, createAuthorizationCodeRequest, createAuthorizationURL, createClientCredentialsTokenRequest, createRefreshAccessTokenRequest, generateCodeChallenge, getOAuth2Tokens, refreshAccessToken, validateAuthorizationCode, validateToken)
+
+[log]   dist/db/index.cjs (total size: 2.43 kB, chunk size: 2.43 kB, exports: accountSchema, coreSchema, rateLimitSchema, sessionSchema, userSchema, verificationSchema)
+
+[log]   dist/social-providers/index.cjs (total size: 87.9 kB, chunk size: 86.1 kB, exports: SocialProviderListEnum, apple, atlassian, cognito, discord, dropbox, facebook, figma, getApplePublicKey, getCognitoPublicKey, github, gitlab, google, huggingface, kakao, kick, line, linear, linkedin, microsoft, naver, notion, paypal, reddit, roblox, salesforce, slack, socialProviderList, socialProviders, spotify, tiktok, twitch, twitter, vk, zoom)
+  └─ dist/error/index.cjs (1.75 kB)
+
+[log]   dist/db/adapter/index.cjs (total size: 15 B, chunk size: 15 B)
+[log]   dist/index.mjs (total size: 1 B, chunk size: 1 B)
+
+[log]   dist/async_hooks/index.mjs (total size: 858 B, chunk size: 858 B, exports: getAsyncLocalStorage)
+
+[log]   dist/middleware/index.mjs (total size: 495 B, chunk size: 495 B, exports: createAuthEndpoint, createAuthMiddleware, optionsMiddleware)
+
+[log]   dist/utils/index.mjs (total size: 83 B, chunk size: 83 B, exports: defineErrorCodes)
+
+[log]   dist/error/index.mjs (total size: 1.7 kB, chunk size: 1.7 kB, exports: BASE_ERROR_CODES, BetterAuthError)
+
+[log]   dist/env/index.mjs (total size: 8.33 kB, chunk size: 8.33 kB, exports: ENV, TTY_COLORS, createLogger, env, getBooleanEnvVar, getColorDepth, getEnvVar, isDevelopment, isProduction, isTest, levels, logger, nodeENV, shouldPublishLog)
+
+[log]   dist/oauth2/index.mjs (total size: 9.88 kB, chunk size: 9.88 kB, exports: clientCredentialsToken, createAuthorizationCodeRequest, createAuthorizationURL, createClientCredentialsTokenRequest, createRefreshAccessTokenRequest, generateCodeChallenge, getOAuth2Tokens, refreshAccessToken, validateAuthorizationCode, validateToken)
+
+[log]   dist/db/index.mjs (total size: 1.67 kB, chunk size: 1.67 kB, exports: accountSchema, coreSchema, rateLimitSchema, sessionSchema, userSchema, verificationSchema)
+
+[log]   dist/social-providers/index.mjs (total size: 85.8 kB, chunk size: 84.1 kB, exports: SocialProviderListEnum, apple, atlassian, cognito, discord, dropbox, facebook, figma, getApplePublicKey, getCognitoPublicKey, github, gitlab, google, huggingface, kakao, kick, line, linear, linkedin, microsoft, naver, notion, paypal, reddit, roblox, salesforce, slack, socialProviderList, socialProviders, spotify, tiktok, twitch, twitter, vk, zoom)
+  └─ dist/error/index.mjs (1.7 kB)
+
+[log]   dist/db/adapter/index.mjs (total size: 1 B, chunk size: 1 B)
+Σ Total dist size (byte size): 865 kB
+[log]
+[warn] Build is done with some warnings:
+
+- Implicitly bundling "bun:sqlite"
+- Implicitly bundling "node:sqlite"

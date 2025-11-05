@@ -1,0 +1,13 @@
+
+> @better-auth/telemetry@1.3.34 build /home/runner/work/better-auth/better-auth/packages/telemetry
+> unbuild --clean
+
+[info] Building telemetry
+[info] Cleaning dist directory: `./dist`
+[success] Build succeeded for telemetry
+[log]   dist/index.cjs (total size: 19.3 kB, chunk size: 19.3 kB, exports: createTelemetry, getTelemetryAuthConfig)
+
+[log]   dist/index.mjs (total size: 19.2 kB, chunk size: 19.2 kB, exports: createTelemetry, getTelemetryAuthConfig)
+
+Σ Total dist size (byte size): 58.5 kB
+[log]
