@@ -10,15 +10,30 @@ import { createHasAccessGrantedEndpoint } from "./has-active-subscription";
 import { createWebhookEndpoint } from "./webhook";
 import { CreemOptions } from "./types";
 
-// Export types for client-side usage
+// Export plugin configuration types
+export type {
+  CreemOptions,
+  GrantAccessContext,
+  RevokeAccessContext,
+  GrantAccessReason,
+  RevokeAccessReason,
+  FlatCheckoutCompleted,
+  FlatRefundCreated,
+  FlatDisputeCreated,
+  FlatSubscriptionEvent,
+} from "./types";
+
+// Export checkout types
 export type {
   CreateCheckoutInput,
   CreateCheckoutResponse,
   CheckoutCustomer,
 } from "./checkout-types";
 
+// Export portal types
 export type { CreatePortalInput, CreatePortalResponse } from "./portal-types";
 
+// Export subscription types
 export type {
   CancelSubscriptionInput,
   CancelSubscriptionResponse,
@@ -29,13 +44,19 @@ export type {
   SubscriptionData,
 } from "./retrieve-subscription-types";
 
+// Export transaction types
 export type {
   SearchTransactionsInput,
   SearchTransactionsResponse,
   TransactionData,
 } from "./search-transactions-types";
 
+// Export access check types
 export type { HasAccessGrantedResponse } from "./has-active-subscription-types";
+
+// Export enhanced client types
+export type { CreemClient } from "./create-creem-auth-client";
+export { createCreemAuthClient } from "./create-creem-auth-client";
 
 /**
  * Creem Better-Auth plugin for payment and subscription management.

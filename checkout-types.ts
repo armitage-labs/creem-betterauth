@@ -1,12 +1,10 @@
 /**
  * Customer information for checkout.
- * If not provided, the authenticated user's email and name will be used automatically.
+ * If not provided, the authenticated user's email will be used automatically.
  */
 export interface CheckoutCustomer {
   /** Customer email address */
   email?: string;
-  /** Customer name */
-  name?: string;
 }
 
 /**
@@ -61,10 +59,10 @@ export interface CreateCheckoutInput {
 
   /**
    * Customer information for the checkout.
-   * If not provided, uses the authenticated user's email and name from the session.
+   * If not provided, uses the authenticated user's email from the session.
    *
    * @optional
-   * @example { email: "user@example.com", name: "John Doe" }
+   * @example { email: "user@example.com" }
    */
   customer?: CheckoutCustomer;
 

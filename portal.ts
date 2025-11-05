@@ -39,7 +39,7 @@ const createPortalHandler = (serverURL: string, options: CreemOptions) => {
         throw new Error(`Creem API error: ${response.statusText}`);
       }
 
-      const portal = await response.json();
+      const portal = await response.json() as { customer_portal_link: string };
 
       return ctx.json({
         url: portal.customer_portal_link,

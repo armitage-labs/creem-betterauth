@@ -16,8 +16,7 @@ export const CheckoutParams = z.object({
   discountCode: z.string().optional(),
   customer: z
     .object({
-      email: z.email().optional(),
-      name: z.string().optional(),
+      email: z.string().email().optional(),
     })
     .optional(),
   customField: z.array(z.record(z.string(), z.unknown())).max(3).optional(),
@@ -44,10 +43,11 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
           requestId: body.requestId,
           units: body.units,
           discountCode: body.discountCode,
-          customer: body.customer || {
-            email: session?.user?.email,
-            name: session?.user?.name,
-          },
+          customer: body.customer?.email ? {
+            email: body.customer.email,
+          } : session?.user?.email ? {
+            email: session.user.email,
+          } : undefined,
           //   customField: body.customField, TODO: Implement proper customField handling
           successUrl: resolveSuccessUrl(
             body.successUrl || options.defaultSuccessUrl,
