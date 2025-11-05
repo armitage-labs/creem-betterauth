@@ -1,0 +1,600 @@
+import { Creem } from "creem";
+import type { CreemOptions } from "./types";
+import type {
+  CreateCheckoutInput,
+  CreateCheckoutResponse,
+} from "./checkout-types";
+import type { CreatePortalResponse } from "./portal-types";
+import type { SubscriptionData } from "./retrieve-subscription-types";
+import type { SearchTransactionsResponse } from "./search-transactions-types";
+import { generateSignature } from "./utils";
+
+/**
+ * Configuration for server-side Creem operations.
+ */
+export interface CreemServerConfig {
+  /** Creem API key */
+  apiKey: string;
+  /** Whether to use test mode */
+  testMode?: boolean;
+}
+
+/**
+ * Initialize a Creem client for server-side operations.
+ * Use this for direct API calls outside of Better Auth endpoints.
+ *
+ * @param config - Configuration options
+ * @returns Configured Creem client instance
+ *
+ * @example
+ * ```typescript
+ * import { createCreemClient } from "@creem_io/better-auth/server";
+ *
+ * const creem = createCreemClient({
+ *   apiKey: process.env.CREEM_API_KEY!,
+ *   testMode: true
+ * });
+ *
+ * // Use directly in Server Actions or API routes
+ * const subscription = await creem.retrieveSubscription({
+ *   xApiKey: process.env.CREEM_API_KEY!,
+ *   subscriptionId: "sub_123"
+ * });
+ * ```
+ */
+export function createCreemClient(config: CreemServerConfig): Creem {
+  const serverURL = config.testMode
+    ? "https://test-api.creem.io"
+    : "https://api.creem.io";
+
+  return new Creem({ serverURL });
+}
+
+/**
+ * Check if a subscription status indicates active access.
+ *
+ * @param status - The subscription status from Creem
+ * @returns True if subscription grants access
+ *
+ * @example
+ * ```typescript
+ * import { isActiveSubscription } from "@creem_io/better-auth/server";
+ *
+ * if (isActiveSubscription(subscription.status)) {
+ *   // User has active access
+ * }
+ * ```
+ */
+export function isActiveSubscription(status: string): boolean {
+  return ["active", "trialing", "paid"].includes(status.toLowerCase());
+}
+
+/**
+ * Format Creem Unix timestamp to JavaScript Date.
+ *
+ * @param timestamp - Unix timestamp from Creem (seconds)
+ * @returns JavaScript Date object
+ *
+ * @example
+ * ```typescript
+ * import { formatCreemDate } from "@creem_io/better-auth/server";
+ *
+ * const renewalDate = formatCreemDate(subscription.next_billing_date);
+ * console.log(renewalDate.toLocaleDateString());
+ * ```
+ */
+export function formatCreemDate(timestamp: number): Date {
+  return new Date(timestamp * 1000);
+}
+
+/**
+ * Calculate days until subscription renewal.
+ *
+ * @param periodEndTimestamp - Unix timestamp of period end
+ * @returns Number of days until renewal (negative if overdue)
+ *
+ * @example
+ * ```typescript
+ * import { getDaysUntilRenewal } from "@creem_io/better-auth/server";
+ *
+ * const days = getDaysUntilRenewal(subscription.current_period_end_date);
+ * if (days > 0) {
+ *   console.log(`Renews in ${days} days`);
+ * } else {
+ *   console.log(`Overdue by ${Math.abs(days)} days`);
+ * }
+ * ```
+ */
+export function getDaysUntilRenewal(periodEndTimestamp: number): number {
+  const renewalDate = formatCreemDate(periodEndTimestamp);
+  const now = new Date();
+  const diffTime = renewalDate.getTime() - now.getTime();
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Validate webhook signature from Creem.
+ * Use this to verify webhook authenticity in custom webhook handlers.
+ *
+ * @param payload - Raw webhook payload string
+ * @param signature - Signature from 'creem-signature' header
+ * @param secret - Your webhook secret
+ * @returns True if signature is valid
+ *
+ * @example
+ * ```typescript
+ * import { validateWebhookSignature } from "@creem_io/better-auth/server";
+ *
+ * export async function POST(req: Request) {
+ *   const payload = await req.text();
+ *   const signature = req.headers.get('creem-signature');
+ *
+ *   if (!validateWebhookSignature(payload, signature, process.env.CREEM_WEBHOOK_SECRET!)) {
+ *     return new Response('Invalid signature', { status: 401 });
+ *   }
+ *
+ *   const event = JSON.parse(payload);
+ *   // Process webhook
+ * }
+ * ```
+ */
+export function validateWebhookSignature(
+  payload: string,
+  signature: string | null,
+  secret: string
+): boolean {
+  if (!signature) return false;
+  return generateSignature(payload, secret) === signature;
+}
+
+/**
+ * Create a checkout session directly (without using Better Auth endpoints).
+ * Useful in Server Components, Server Actions, or custom API routes.
+ *
+ * @param config - Creem configuration
+ * @param input - Checkout parameters
+ * @returns Checkout URL and redirect flag
+ *
+ * @example
+ * ```typescript
+ * import { createCheckout } from "@creem_io/better-auth/server";
+ *
+ * // Server Action
+ * export async function startCheckout(productId: string) {
+ *   const { url } = await createCheckout(
+ *     {
+ *       apiKey: process.env.CREEM_API_KEY!,
+ *       testMode: true
+ *     },
+ *     {
+ *       productId,
+ *       customer: { email: user.email },
+ *       successUrl: "/success",
+ *       metadata: { userId: user.id }
+ *     }
+ *   );
+ *
+ *   redirect(url);
+ * }
+ * ```
+ */
+export async function createCheckout(
+  config: CreemServerConfig,
+  input: Omit<CreateCheckoutInput, "customer"> & {
+    customer: { email?: string; id?: string };
+  }
+): Promise<CreateCheckoutResponse> {
+  const creem = createCreemClient(config);
+
+  const checkout = await creem.createCheckout({
+    xApiKey: config.apiKey,
+    createCheckoutRequest: {
+      productId: input.productId,
+      requestId: input.requestId,
+      units: input.units,
+      discountCode: input.discountCode,
+      customer: input.customer,
+      successUrl: input.successUrl,
+      metadata: input.metadata,
+    },
+  });
+
+  return {
+    url: checkout.checkoutUrl || "",
+    redirect: true,
+  };
+}
+
+/**
+ * Create a customer portal session directly.
+ * Useful in Server Components, Server Actions, or custom API routes.
+ *
+ * @param config - Creem configuration
+ * @param customerId - Creem customer ID
+ * @returns Portal URL and redirect flag
+ *
+ * @example
+ * ```typescript
+ * import { createPortal } from "@creem_io/better-auth/server";
+ *
+ * // Server Component
+ * export default async function BillingPage() {
+ *   const session = await getSession();
+ *
+ *   async function openPortal() {
+ *     'use server';
+ *     const { url } = await createPortal(
+ *       {
+ *         apiKey: process.env.CREEM_API_KEY!,
+ *         testMode: true
+ *       },
+ *       session.user.creemCustomerId
+ *     );
+ *     redirect(url);
+ *   }
+ *
+ *   return <form action={openPortal}>...</form>;
+ * }
+ * ```
+ */
+export async function createPortal(
+  config: CreemServerConfig,
+  customerId: string
+): Promise<CreatePortalResponse> {
+  const serverURL = config.testMode
+    ? "https://test-api.creem.io"
+    : "https://api.creem.io";
+
+  const response = await fetch(`${serverURL}/v1/customers/billing`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": config.apiKey,
+    },
+    body: JSON.stringify({
+      customer_id: customerId,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Creem API error: ${response.statusText}`);
+  }
+
+  const portal = (await response.json()) as { customer_portal_link: string };
+
+  return {
+    url: portal.customer_portal_link,
+    redirect: true,
+  };
+}
+
+/**
+ * Cancel a subscription directly.
+ * Useful in Server Actions or custom API routes.
+ *
+ * @param config - Creem configuration
+ * @param subscriptionId - Subscription ID to cancel
+ * @returns Success status and message
+ *
+ * @example
+ * ```typescript
+ * import { cancelSubscription } from "@creem_io/better-auth/server";
+ *
+ * // Server Action
+ * export async function handleCancelSubscription(subId: string) {
+ *   const result = await cancelSubscription(
+ *     {
+ *       apiKey: process.env.CREEM_API_KEY!,
+ *       testMode: true
+ *     },
+ *     subId
+ *   );
+ *
+ *   if (result.success) {
+ *     revalidatePath('/billing');
+ *   }
+ * }
+ * ```
+ */
+export async function cancelSubscription(
+  config: CreemServerConfig,
+  subscriptionId: string
+): Promise<{ success: boolean; message: string }> {
+  const creem = createCreemClient(config);
+
+  await creem.cancelSubscription({
+    xApiKey: config.apiKey,
+    id: subscriptionId,
+  });
+
+  return {
+    success: true,
+    message: "Subscription cancelled successfully",
+  };
+}
+
+/**
+ * Retrieve subscription details directly.
+ * Useful in Server Components, Server Actions, or custom API routes.
+ *
+ * @param config - Creem configuration
+ * @param subscriptionId - Subscription ID to retrieve
+ * @returns Subscription data
+ *
+ * @example
+ * ```typescript
+ * import { retrieveSubscription } from "@creem_io/better-auth/server";
+ *
+ * // Server Component
+ * export default async function SubscriptionPage({ params }) {
+ *   const subscription = await retrieveSubscription(
+ *     {
+ *       apiKey: process.env.CREEM_API_KEY!,
+ *       testMode: true
+ *     },
+ *     params.subscriptionId
+ *   );
+ *
+ *   return (
+ *     <div>
+ *       <h1>{subscription.product.name}</h1>
+ *       <p>Status: {subscription.status}</p>
+ *     </div>
+ *   );
+ * }
+ * ```
+ */
+export async function retrieveSubscription(
+  config: CreemServerConfig,
+  subscriptionId: string
+): Promise<SubscriptionData> {
+  const creem = createCreemClient(config);
+
+  const subscription = await creem.retrieveSubscription({
+    xApiKey: config.apiKey,
+    subscriptionId: subscriptionId,
+  });
+
+  return subscription as unknown as SubscriptionData;
+}
+
+/**
+ * Search transactions directly.
+ * Useful in Server Components, Server Actions, or custom API routes.
+ *
+ * @param config - Creem configuration
+ * @param filters - Search filters
+ * @returns Transaction search results
+ *
+ * @example
+ * ```typescript
+ * import { searchTransactions } from "@creem_io/better-auth/server";
+ *
+ * // Server Component
+ * export default async function TransactionsPage() {
+ *   const { transactions } = await searchTransactions(
+ *     {
+ *       apiKey: process.env.CREEM_API_KEY!,
+ *       testMode: true
+ *     },
+ *     {
+ *       customerId: user.creemCustomerId,
+ *       pageSize: 50
+ *     }
+ *   );
+ *
+ *   return <TransactionList transactions={transactions} />;
+ * }
+ * ```
+ */
+export async function searchTransactions(
+  config: CreemServerConfig,
+  filters?: {
+    customerId?: string;
+    productId?: string;
+    orderId?: string;
+    pageNumber?: number;
+    pageSize?: number;
+  }
+): Promise<SearchTransactionsResponse> {
+  const creem = createCreemClient(config);
+
+  const response = await creem.searchTransactions({
+    xApiKey: config.apiKey,
+    customerId: filters?.customerId,
+    productId: filters?.productId,
+    orderId: filters?.orderId,
+    pageNumber: filters?.pageNumber,
+    pageSize: filters?.pageSize,
+  });
+
+  return response as unknown as SearchTransactionsResponse;
+}
+
+/**
+ * Check if user has active subscription with access.
+ * Works in both database-enabled and database-free modes.
+ *
+ * **Database Mode:** Queries local subscription table for fast access checks.
+ * **API Mode:** Queries Creem API directly (requires API call).
+ *
+ * @param config - Creem configuration
+ * @param options - Check options
+ * @returns Access status information
+ *
+ * @example
+ * ```typescript
+ * // Database mode (when persistSubscriptions: true)
+ * import { checkSubscriptionAccess } from "@creem_io/better-auth/server";
+ * import { auth } from "@/lib/auth";
+ *
+ * const status = await checkSubscriptionAccess(
+ *   {
+ *     apiKey: process.env.CREEM_API_KEY!,
+ *     testMode: true
+ *   },
+ *   {
+ *     database: auth.options.database, // Pass database adapter
+ *     userId: session.user.id
+ *   }
+ * );
+ *
+ * // API mode (when persistSubscriptions: false or no database)
+ * const status = await checkSubscriptionAccess(
+ *   {
+ *     apiKey: process.env.CREEM_API_KEY!,
+ *     testMode: true
+ *   },
+ *   {
+ *     customerId: session.user.creemCustomerId
+ *   }
+ * );
+ *
+ * if (!status.hasAccess) {
+ *   redirect('/subscribe');
+ * }
+ * ```
+ */
+export async function checkSubscriptionAccess(
+  config: CreemServerConfig,
+  options:
+    | { database: any; userId: string; customerId?: never }
+    | { customerId: string; database?: never; userId?: never }
+): Promise<{
+  hasAccess: boolean;
+  status?: string;
+  subscriptionId?: string;
+  expiresAt?: Date;
+  productName?: string;
+}> {
+  // Database mode
+  if (options.database && options.userId) {
+    try {
+      const subscriptions = await options.database
+        .select()
+        .from("subscription")
+        .where("referenceId", "=", options.userId);
+
+      const activeSubscription = subscriptions.find(
+        (sub: any) =>
+          sub.status === "active" ||
+          sub.status === "trialing" ||
+          sub.status === "paid"
+      );
+
+      if (activeSubscription) {
+        return {
+          hasAccess: true,
+          status: activeSubscription.status,
+          subscriptionId: activeSubscription.creemSubscriptionId,
+          expiresAt: activeSubscription.periodEnd
+            ? new Date(activeSubscription.periodEnd)
+            : undefined,
+        };
+      }
+
+      return { hasAccess: false };
+    } catch (error) {
+      console.error("Database subscription check error:", error);
+      // Fall through to API check
+    }
+  }
+
+  // API mode
+  if (options.customerId) {
+    try {
+      // Note: The Creem SDK doesn't have a direct searchSubscriptions method.
+      // You'll need to retrieve subscriptions by other means or use the database mode.
+      console.warn("API mode for subscription checks requires custom implementation with Creem API.");
+      return { hasAccess: false };
+    } catch (error) {
+      console.error("API subscription check error:", error);
+      return { hasAccess: false };
+    }
+  }
+
+  return { hasAccess: false };
+}
+
+/**
+ * Get all active subscriptions for a user or customer.
+ * Works in both database-enabled and database-free modes.
+ *
+ * @param config - Creem configuration
+ * @param options - Query options
+ * @returns List of active subscriptions
+ *
+ * @example
+ * ```typescript
+ * import { getActiveSubscriptions } from "@creem_io/better-auth/server";
+ *
+ * // Database mode
+ * const subscriptions = await getActiveSubscriptions(
+ *   config,
+ *   { database: auth.options.database, userId: user.id }
+ * );
+ *
+ * // API mode
+ * const subscriptions = await getActiveSubscriptions(
+ *   config,
+ *   { customerId: user.creemCustomerId }
+ * );
+ * ```
+ */
+export async function getActiveSubscriptions(
+  config: CreemServerConfig,
+  options:
+    | { database: any; userId: string; customerId?: never }
+    | { customerId: string; database?: never; userId?: never }
+): Promise<
+  Array<{
+    id: string;
+    status: string;
+    productId: string;
+    productName?: string;
+    periodEnd?: Date;
+  }>
+> {
+  // Database mode
+  if (options.database && options.userId) {
+    try {
+      const subscriptions = await options.database
+        .select()
+        .from("subscription")
+        .where("referenceId", "=", options.userId);
+
+      return subscriptions
+        .filter(
+          (sub: any) =>
+            sub.status === "active" ||
+            sub.status === "trialing" ||
+            sub.status === "paid"
+        )
+        .map((sub: any) => ({
+          id: sub.creemSubscriptionId,
+          status: sub.status,
+          productId: sub.productId,
+          periodEnd: sub.periodEnd ? new Date(sub.periodEnd) : undefined,
+        }));
+    } catch (error) {
+      console.error("Database subscription query error:", error);
+      return [];
+    }
+  }
+
+  // API mode
+  if (options.customerId) {
+    try {
+      // Note: The Creem SDK doesn't have a direct searchSubscriptions method.
+      // You'll need to retrieve subscriptions by other means or use the database mode.
+      console.warn("API mode for listing subscriptions requires custom implementation with Creem API.");
+      return [];
+    } catch (error) {
+      console.error("API subscription query error:", error);
+      return [];
+    }
+  }
+
+  return [];
+}
+

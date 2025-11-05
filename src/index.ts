@@ -58,6 +58,23 @@ export type { HasAccessGrantedResponse } from "./has-active-subscription-types";
 export type { CreemClient } from "./create-creem-auth-client";
 export { createCreemAuthClient } from "./create-creem-auth-client";
 
+// Export server utilities and types
+export type { CreemServerConfig } from "./creem-server";
+export {
+  createCreemClient,
+  isActiveSubscription,
+  formatCreemDate,
+  getDaysUntilRenewal,
+  validateWebhookSignature,
+  createCheckout,
+  createPortal,
+  cancelSubscription,
+  retrieveSubscription,
+  searchTransactions,
+  checkSubscriptionAccess,
+  getActiveSubscriptions,
+} from "./creem-server";
+
 /**
  * Creem Better-Auth plugin for payment and subscription management.
  *

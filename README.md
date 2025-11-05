@@ -2,14 +2,18 @@
 
 Official Better-Auth plugin for seamless Creem payment and subscription management with **crystal-clear TypeScript support**.
 
-## ✨ Key Features
+## ✨ Features
 
-- 🎯 **Clean Type Hints**: No more messy generic types - see exactly what parameters are required/optional
-- 📚 **Full JSDoc Documentation**: Hover over any method to see examples and parameter descriptions
-- 🔐 **Automatic User Integration**: Session user info automatically included in requests
-- 🪝 **Webhook Handlers**: Flattened webhook types for easy destructuring
-- 🎨 **TypeScript First**: Built with TypeScript for the best developer experience
-- ⚡ **Zero Config**: Works out of the box with sensible defaults
+- 🔐 **Automatic Customer Creation** - Create Creem customers when users sign up
+- 💳 **Checkout Sessions** - Create payment sessions with product-specific checkout
+- 📊 **Customer Portal** - Let users manage their subscriptions, view invoices, and update payment methods
+- 🔄 **Subscription Management** - Cancel, retrieve, and track subscription details
+- 💰 **Transaction History** - Search and filter transaction records
+- 🪝 **Webhook Processing** - Handle Creem webhooks with signature verification
+- 💾 **Database Persistence** - Optional subscription data storage in your database
+- 🎯 **TypeScript First** - Full type safety with clean IntelliSense
+- 📖 **Rich Documentation** - JSDoc comments on every method and type
+- ⚡ **Flexible Architecture** - Use Better Auth endpoints OR direct server-side functions
 
 ## 📦 Installation
 
@@ -17,9 +21,9 @@ Official Better-Auth plugin for seamless Creem payment and subscription manageme
 npm install @creem_io/better-auth better-auth creem
 ```
 
-### Required Peer Dependencies
+### Required Dependencies
 
-- `better-auth` ^1.3.34 (required)
+- `better-auth` ^1.3.34 (peer dependency)
 - `creem` ^0.4.0 (included)
 - `zod` ^3.23.8 (included)
 
@@ -28,6 +32,8 @@ npm install @creem_io/better-auth better-auth creem
 ## 🚀 Quick Start
 
 ### Server Setup
+
+Create your Better Auth configuration with the Creem plugin:
 
 ```typescript
 // lib/auth.ts
@@ -41,23 +47,25 @@ export const auth = betterAuth({
   plugins: [
     creem({
       apiKey: process.env.CREEM_API_KEY!,
+      webhookSecret: process.env.CREEM_WEBHOOK_SECRET,
       testMode: true, // Use test mode for development
       defaultSuccessUrl: "/success",
-      
-      // Optional: Handle access grants/revokes
+      persistSubscriptions: true, // Enable database persistence (default: true)
+
+      // Optional: Webhook handlers
       onGrantAccess: async ({ customer, product, metadata, reason }) => {
         const userId = metadata?.referenceId as string;
         console.log(`Granting access (${reason}) to ${customer.email}`);
         // Update your database to grant access
       },
-      
+
       onRevokeAccess: async ({ customer, product, metadata, reason }) => {
         const userId = metadata?.referenceId as string;
         console.log(`Revoking access (${reason}) from ${customer.email}`);
         // Update your database to revoke access
-      }
-    })
-  ]
+      },
+    }),
+  ],
 });
 ```
 
@@ -70,13 +78,13 @@ import { creemClient } from "@creem_io/better-auth/client";
 
 export const authClient = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_APP_URL,
-  plugins: [creemClient()]
+  plugins: [creemClient()],
 });
 ```
 
 ### Client Setup (Option 2: Enhanced TypeScript)
 
-For even better TypeScript support with cleaner IntelliSense, use the `createCreemAuthClient` helper:
+For even better TypeScript support with cleaner IntelliSense:
 
 ```typescript
 // lib/auth-client.ts
@@ -85,280 +93,410 @@ import { creemClient } from "@creem_io/better-auth/client";
 
 export const authClient = createCreemAuthClient({
   baseURL: process.env.NEXT_PUBLIC_APP_URL,
-  plugins: [creemClient()]
+  plugins: [creemClient()],
 });
 
 // Now you get the cleanest possible type hints!
-// authClient.creem.createCheckout() shows CreateCheckoutInput instead of generic types
 ```
 
-The `createCreemAuthClient` wrapper provides:
-- ✅ Cleaner parameter types in your IDE
-- ✅ Better autocomplete
-- ✅ Easier to understand method signatures
-- ✅ Same runtime behavior as standard setup
+The `createCreemAuthClient` wrapper provides cleaner parameter types and better autocomplete.
 
-## 📖 API Reference
+### Migrate the Database
 
-### Client Methods
+If you're using database persistence (`persistSubscriptions: true`), run migrations:
 
-All methods are available via `authClient.creem.*` and return a Promise with `{ data, error }`:
+```bash
+npx @better-auth/cli migrate
+```
 
-#### `createCheckout(input: CreateCheckoutInput)`
+Or generate the schema:
 
-Create a checkout session for a product. Automatically includes authenticated user info.
+```bash
+npx @better-auth/cli generate
+```
 
-**Required Parameters:**
-- `productId` - The Creem product ID
+See the [Schema](#schema) section for manual setup.
 
-**Optional Parameters:**
+### Set Up Webhooks
+
+1. Create a webhook endpoint in your Creem dashboard pointing to:
+
+```
+https://your-domain.com/api/auth/creem/webhook
+```
+
+(`/api/auth` is the default path for the Better Auth server)
+
+2. Select at least these events:
+
+   - `checkout.completed`
+   - `subscription.active`
+   - `subscription.trialing`
+   - `subscription.canceled`
+   - `subscription.paid`
+   - `subscription.expired`
+   - `subscription.paused`
+
+3. Save the webhook signing secret and add it to your environment variables as `CREEM_WEBHOOK_SECRET`.
+
+## 💻 Usage
+
+### Client-Side (Better Auth Endpoints)
+
+#### Create Checkout
+
+Create a checkout session for a product. The plugin automatically includes the authenticated user's information.
+
+```typescript
+"use client";
+
+import { authClient } from "@/lib/auth-client";
+import type { CreateCheckoutInput } from "@creem_io/better-auth";
+
+export function SubscribeButton({ productId }: { productId: string }) {
+  const handleCheckout = async () => {
+    const { data, error } = await authClient.creem.createCheckout({
+      productId, // Required
+      units: 1, // Optional, defaults to 1
+      successUrl: "/thank-you", // Optional
+      discountCode: "SUMMER2024", // Optional
+      metadata: { source: "web" } // Optional
+    });
+
+    if (data?.url) {
+      window.location.href = data.url;
+    }
+  };
+
+  return <button onClick={handleCheckout}>Subscribe Now</button>;
+}
+```
+
+**Parameters:**
+
+- `productId` (required) - The Creem product ID
 - `units` - Number of units (default: 1)
-- `successUrl` - Redirect URL after checkout (falls back to `defaultSuccessUrl`)
+- `successUrl` - Success redirect URL
 - `discountCode` - Discount code to apply
 - `customer` - Customer info (defaults to session user)
 - `metadata` - Additional metadata (auto-includes user ID as `referenceId`)
 - `requestId` - Idempotency key
-- `customField` - Up to 3 custom fields
 
-**Example:**
+#### Create Customer Portal
+
+Open the Creem customer portal where users can manage subscriptions:
+
 ```typescript
-import { authClient } from "@/lib/auth-client";
-import type { CreateCheckoutInput } from "@creem_io/better-auth";
+const handlePortal = async () => {
+  const { data, error } = await authClient.creem.createPortal();
 
-const handleCheckout = async () => {
-  const { data, error } = await authClient.creem.createCheckout({
-    productId: "prod_abc123",
-    units: 1,
-    successUrl: "/thank-you",
-    discountCode: "SUMMER2024",
-    metadata: {
-      source: "web"
-    }
-  });
-  
   if (data?.url) {
     window.location.href = data.url;
   }
 };
 ```
 
-#### `createPortal(input?: CreatePortalInput)`
+#### Cancel Subscription
 
-Create a customer portal session. Opens Creem portal where users can manage subscriptions.
-
-**Optional Parameters:**
-- `customerId` - Override customer ID (defaults to session user's Creem customer ID)
-
-**Example:**
-```typescript
-const handlePortal = async () => {
-  // Use default customer from session
-  const { data } = await authClient.creem.createPortal();
-
-  // Or specify a customer ID
-  const { data } = await authClient.creem.createPortal({
-    customerId: "cust_abc123"
-  });
-
-  if (data?.url) window.location.href = data.url;
-};
-```
-
-#### `cancelSubscription(input: CancelSubscriptionInput)`
-
-Cancel an active subscription.
-
-**Required Parameters:**
-- `id` - The subscription ID to cancel
-
-**Example:**
 ```typescript
 const handleCancel = async (subscriptionId: string) => {
   const { data, error } = await authClient.creem.cancelSubscription({
-    id: subscriptionId
+    id: subscriptionId,
   });
 
   if (data?.success) {
-    console.log(data.message); // "Subscription cancelled successfully"
+    console.log(data.message);
   }
 };
 ```
 
-#### `retrieveSubscription(input: RetrieveSubscriptionInput)`
+#### Retrieve Subscription
 
-Get detailed information about a subscription.
-
-**Required Parameters:**
-- `id` - The subscription ID
-
-**Example:**
 ```typescript
 const getSubscription = async (subscriptionId: string) => {
   const { data } = await authClient.creem.retrieveSubscription({
-    id: subscriptionId
+    id: subscriptionId,
   });
 
   if (data) {
     console.log(`Status: ${data.status}`);
     console.log(`Product: ${data.product.name}`);
     console.log(`Price: ${data.product.price} ${data.product.currency}`);
-    console.log(`Next billing: ${new Date(data.next_billing_date * 1000)}`);
   }
 };
 ```
 
-#### `searchTransactions(input?: SearchTransactionsInput)`
+#### Search Transactions
 
-Search transaction history with filters and pagination.
-
-**Optional Parameters:**
-- `customerId` - Filter by customer ID (defaults to session user)
-- `productId` - Filter by product ID
-- `orderId` - Filter by order ID
-- `pageNumber` - Page number (starts at 1)
-- `pageSize` - Number of results per page
-
-**Example:**
 ```typescript
-  // Get all transactions for current user
-  const { data } = await authClient.creem.searchTransactions();
+const { data } = await authClient.creem.searchTransactions({
+  customerId: "cust_abc123", // Optional
+  productId: "prod_xyz789", // Optional
+  pageNumber: 1, // Optional
+  pageSize: 50, // Optional
+});
 
-  // Search with filters
-  const { data } = await authClient.creem.searchTransactions({
-    customerId: "cust_abc123",
-    productId: "prod_xyz789",
-    pageNumber: 2,
-    pageSize: 50
+if (data?.transactions) {
+  data.transactions.forEach((tx) => {
+    console.log(`${tx.type}: ${tx.amount} ${tx.currency}`);
   });
-
-  if (data?.transactions) {
-    data.transactions.forEach(tx => {
-      console.log(`${tx.type}: ${tx.amount} ${tx.currency}`);
-      console.log(`Status: ${tx.status}`);
-      console.log(`Date: ${new Date(tx.created_at * 1000)}`);
-    });
-  }
+}
 ```
 
-#### `hasAccessGranted()`
+#### Check Access
 
-Check if the current user has an active subscription or access.
-
-**Example:**
 ```typescript
 const { data } = await authClient.creem.hasAccessGranted();
 
 if (data?.hasAccess) {
-  console.log("User has active subscription");
+  // User has active subscription
 }
 ```
 
-## 📝 Type Imports
+### 🖥️ Server-Side Utilities
 
-### Server-Side Types
+Use these functions directly in Server Components, Server Actions, or API routes **without** going through Better Auth endpoints.
+
+#### Import Server Utilities
 
 ```typescript
-// Plugin configuration
-import type { CreemOptions } from "@creem_io/better-auth";
-
-// Access control types
-import type {
-  GrantAccessContext,
-  RevokeAccessContext,
-  GrantAccessReason,
-  RevokeAccessReason
-} from "@creem_io/better-auth";
-
-// Webhook types
-import type {
-  FlatCheckoutCompleted,
-  FlatRefundCreated,
-  FlatDisputeCreated,
-  FlatSubscriptionEvent
-} from "@creem_io/better-auth";
+import {
+  createCreemClient,
+  createCheckout,
+  createPortal,
+  cancelSubscription,
+  retrieveSubscription,
+  searchTransactions,
+  checkSubscriptionAccess,
+  getActiveSubscriptions,
+  isActiveSubscription,
+  formatCreemDate,
+  getDaysUntilRenewal,
+  validateWebhookSignature,
+} from "@creem_io/better-auth/server";
 ```
 
-### Client-Side Types
+#### Server Component Example
 
 ```typescript
-// Checkout types
-import type {
-  CreateCheckoutInput,
-  CreateCheckoutResponse,
-  CheckoutCustomer
-} from "@creem_io/better-auth";
+// app/dashboard/page.tsx
+import { checkSubscriptionAccess } from "@creem_io/better-auth/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
-// Portal types
-import type {
-  CreatePortalInput,
-  CreatePortalResponse
-} from "@creem_io/better-auth";
+export default async function DashboardPage() {
+  const session = await auth.api.getSession({ headers: await headers() });
 
-// Subscription types
-import type {
-  CancelSubscriptionInput,
-  CancelSubscriptionResponse,
-  RetrieveSubscriptionInput,
-  SubscriptionData
-} from "@creem_io/better-auth";
+  if (!session?.user) {
+    redirect('/login');
+  }
 
-// Transaction types
-import type {
-  SearchTransactionsInput,
-  SearchTransactionsResponse,
-  TransactionData
-} from "@creem_io/better-auth";
+  // Database mode (when persistSubscriptions: true)
+  const status = await checkSubscriptionAccess(
+    {
+      apiKey: process.env.CREEM_API_KEY!,
+      testMode: true
+    },
+    {
+      database: auth.options.database,
+      userId: session.user.id
+    }
+  );
 
-// Access check types
-import type { HasAccessGrantedResponse } from "@creem_io/better-auth";
-```
+  if (!status.hasAccess) {
+    redirect('/subscribe');
+  }
 
-### Enhanced Client Types
-
-```typescript
-// When using createCreemAuthClient
-import type { CreemClient } from "@creem_io/better-auth/create-creem-auth-client";
-```
-
-## ⚙️ Configuration Options
-
-### `CreemOptions`
-
-All available options for the `creem()` plugin:
-
-```typescript
-interface CreemOptions {
-  // Required
-  apiKey: string;                    // Your Creem API key
-  
-  // Optional
-  webhookSecret?: string;            // For webhook signature verification
-  testMode?: boolean;                // Use test environment (default: false)
-  baseUrl?: string;                  // Custom base URL
-  defaultSuccessUrl?: string;        // Default success redirect URL
-  persistSubscriptions?: boolean;    // Persist to database (default: true)
-  
-  // Webhook Handlers
-  onCheckoutCompleted?: (data: FlatCheckoutCompleted) => void;
-  onRefundCreated?: (data: FlatRefundCreated) => void;
-  onDisputeCreated?: (data: FlatDisputeCreated) => void;
-  onSubscriptionActive?: (data: FlatSubscriptionEvent<"subscription.active">) => void;
-  onSubscriptionTrialing?: (data: FlatSubscriptionEvent<"subscription.trialing">) => void;
-  onSubscriptionCanceled?: (data: FlatSubscriptionEvent<"subscription.canceled">) => void;
-  onSubscriptionPaid?: (data: FlatSubscriptionEvent<"subscription.paid">) => void;
-  onSubscriptionExpired?: (data: FlatSubscriptionEvent<"subscription.expired">) => void;
-  onSubscriptionUnpaid?: (data: FlatSubscriptionEvent<"subscription.unpaid">) => void;
-  onSubscriptionUpdate?: (data: FlatSubscriptionEvent<"subscription.update">) => void;
-  onSubscriptionPastDue?: (data: FlatSubscriptionEvent<"subscription.past_due">) => void;
-  onSubscriptionPaused?: (data: FlatSubscriptionEvent<"subscription.paused">) => void;
-  
-  // Access Control (High-level handlers)
-  onGrantAccess?: (context: GrantAccessContext) => void | Promise<void>;
-  onRevokeAccess?: (context: RevokeAccessContext) => void | Promise<void>;
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <p>Status: {status.status}</p>
+      {status.expiresAt && (
+        <p>Renews: {status.expiresAt.toLocaleDateString()}</p>
+      )}
+    </div>
+  );
 }
 ```
 
-## 🪝 Webhook Handlers
+#### Server Action Example
+
+```typescript
+// app/actions.ts
+"use server";
+
+import { createCheckout } from "@creem_io/better-auth/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+
+export async function startCheckout(productId: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+
+  if (!session?.user) {
+    throw new Error("Not authenticated");
+  }
+
+  const { url } = await createCheckout(
+    {
+      apiKey: process.env.CREEM_API_KEY!,
+      testMode: true,
+    },
+    {
+      productId,
+      customer: { email: session.user.email },
+      successUrl: "/success",
+      metadata: { userId: session.user.id },
+    },
+  );
+
+  redirect(url);
+}
+```
+
+#### Middleware Example
+
+```typescript
+// middleware.ts
+import { checkSubscriptionAccess } from "@creem_io/better-auth/server";
+import { auth } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function middleware(request: NextRequest) {
+  const session = await auth.api.getSession({
+    headers: request.headers,
+  });
+
+  if (!session?.user) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  const status = await checkSubscriptionAccess(
+    {
+      apiKey: process.env.CREEM_API_KEY!,
+      testMode: true,
+    },
+    {
+      database: auth.options.database,
+      userId: session.user.id,
+    },
+  );
+
+  if (!status.hasAccess) {
+    return NextResponse.redirect(new URL("/subscribe", request.url));
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/dashboard/:path*"],
+};
+```
+
+#### Utility Functions
+
+```typescript
+import {
+  isActiveSubscription,
+  formatCreemDate,
+  getDaysUntilRenewal,
+} from "@creem_io/better-auth/server";
+
+// Check if status grants access
+if (isActiveSubscription(subscription.status)) {
+  // User has access
+}
+
+// Format Creem timestamps
+const renewalDate = formatCreemDate(subscription.next_billing_date);
+console.log(renewalDate.toLocaleDateString());
+
+// Calculate days until renewal
+const days = getDaysUntilRenewal(subscription.current_period_end_date);
+console.log(`Renews in ${days} days`);
+```
+
+#### Custom Webhook Handler
+
+```typescript
+// app/api/webhooks/custom/route.ts
+import { validateWebhookSignature } from "@creem_io/better-auth/server";
+
+export async function POST(req: Request) {
+  const payload = await req.text();
+  const signature = req.headers.get("creem-signature");
+
+  if (
+    !validateWebhookSignature(
+      payload,
+      signature,
+      process.env.CREEM_WEBHOOK_SECRET!,
+    )
+  ) {
+    return new Response("Invalid signature", { status: 401 });
+  }
+
+  const event = JSON.parse(payload);
+  // Custom webhook handling logic
+
+  return Response.json({ received: true });
+}
+```
+
+## 🔄 Database Mode vs API Mode
+
+The plugin supports two operational modes:
+
+### Database Mode (Recommended)
+
+When `persistSubscriptions: true` (default), subscription data is stored in your database.
+
+**Benefits:**
+
+- ✅ Fast access checks (no API calls)
+- ✅ Offline access to subscription data
+- ✅ Query subscriptions with SQL
+- ✅ Automatic sync via webhooks
+
+**Usage:**
+
+```typescript
+// Fast database queries
+const status = await checkSubscriptionAccess(config, {
+  database: auth.options.database,
+  userId: user.id,
+});
+```
+
+### API Mode
+
+When `persistSubscriptions: false`, all data comes directly from Creem API.
+
+**Benefits:**
+
+- ✅ No database schema needed
+- ✅ Always up-to-date data
+- ✅ Simpler setup
+
+**Limitations:**
+
+- ⚠️ Requires API call for each check
+- ⚠️ Some features require custom implementation
+
+**Usage:**
+
+```typescript
+// Direct API calls
+const status = await checkSubscriptionAccess(config, {
+  customerId: user.creemCustomerId,
+});
+```
+
+**Note:** In API mode, some functions like `checkSubscriptionAccess` and `getActiveSubscriptions` have limited functionality and may require custom implementation with the Creem SDK.
+
+## 🪝 Webhook Handling
 
 The plugin provides two types of webhook handlers:
 
@@ -370,28 +508,25 @@ Handle specific webhook events with all properties flattened:
 creem({
   apiKey: process.env.CREEM_API_KEY!,
   webhookSecret: process.env.CREEM_WEBHOOK_SECRET!,
-  
+
   onCheckoutCompleted: async (data) => {
-    // All properties at top level
-    const { 
-      webhookEventType,  // "checkout.completed"
+    const {
+      webhookEventType, // "checkout.completed"
       webhookId,
-      webhookCreatedAt,
       product,
       customer,
       order,
       subscription,
-      status
     } = data;
-    
+
     console.log(`${customer.email} purchased ${product.name}`);
   },
-  
+
   onSubscriptionActive: async (data) => {
-    const { product, customer, status, metadata } = data;
-    console.log(`${customer.email} subscribed to ${product.name}`);
-  }
-})
+    const { product, customer, status } = data;
+    // Handle active subscription
+  },
+});
 ```
 
 ### 2. Access Control Handlers (Recommended)
@@ -402,233 +537,178 @@ Use high-level `onGrantAccess` and `onRevokeAccess` for simpler access managemen
 creem({
   apiKey: process.env.CREEM_API_KEY!,
   webhookSecret: process.env.CREEM_WEBHOOK_SECRET!,
-  
+
   // Triggered for: active, trialing, and paid subscriptions
   onGrantAccess: async ({ reason, product, customer, metadata }) => {
     const userId = metadata?.referenceId as string;
-    
-    // Update your database
+
     await db.user.update({
       where: { id: userId },
-      data: { hasAccess: true, subscriptionStatus: reason }
+      data: { hasAccess: true, subscriptionStatus: reason },
     });
-    
+
     console.log(`Granted ${reason} to ${customer.email}`);
   },
-  
+
   // Triggered for: paused, expired, and canceled subscriptions
   onRevokeAccess: async ({ reason, product, customer, metadata }) => {
     const userId = metadata?.referenceId as string;
-    
-    // Update your database
+
     await db.user.update({
       where: { id: userId },
-      data: { hasAccess: false, subscriptionStatus: reason }
+      data: { hasAccess: false, subscriptionStatus: reason },
     });
-    
+
     console.log(`Revoked access (${reason}) from ${customer.email}`);
-  }
-})
+  },
+});
 ```
 
 **Grant Reasons:**
+
 - `subscription_active` - Subscription is active
 - `subscription_trialing` - Subscription is in trial
 - `subscription_paid` - Subscription payment received
 
 **Revoke Reasons:**
+
 - `subscription_paused` - Subscription paused
 - `subscription_expired` - Subscription expired
 
-### Setting Up Webhooks
+## 📊 Schema
 
-1. Add webhook endpoint to your Better-Auth configuration:
+When `persistSubscriptions: true`, the plugin creates these database tables:
 
-```typescript
-// app/api/auth/[...all]/route.ts
-import { auth } from "@/lib/auth";
+### `subscription` Table
 
-export const { GET, POST } = auth.handler;
-```
+| Field                 | Type    | Description           |
+| --------------------- | ------- | --------------------- |
+| `id`                  | string  | Primary key           |
+| `productId`           | string  | Creem product ID      |
+| `referenceId`         | string  | Your user/org ID      |
+| `creemCustomerId`     | string  | Creem customer ID     |
+| `creemSubscriptionId` | string  | Creem subscription ID |
+| `creemOrderId`        | string  | Creem order ID        |
+| `status`              | string  | Subscription status   |
+| `periodStart`         | date    | Period start date     |
+| `periodEnd`           | date    | Period end date       |
+| `cancelAtPeriodEnd`   | boolean | Cancel flag           |
 
-2. Configure webhook URL in Creem dashboard:
-```
-https://yourdomain.com/api/auth/creem/webhook
-```
+### `user` Table Extension
 
-3. Add webhook secret to environment variables:
-```env
-CREEM_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxx
-```
+| Field             | Type   | Description                  |
+| ----------------- | ------ | ---------------------------- |
+| `creemCustomerId` | string | Links user to Creem customer |
 
-## 💾 Database Persistence
+## ⚙️ Configuration Options
 
-By default, the plugin creates database tables to persist subscription data:
-
-### Schema Tables
-
-**`subscription` table:**
-- `productId` - Creem product ID
-- `referenceId` - Your user ID
-- `creemCustomerId` - Creem customer ID
-- `creemSubscriptionId` - Creem subscription ID
-- `creemOrderId` - Creem order ID
-- `status` - Subscription status
-- `periodStart` - Period start date
-- `periodEnd` - Period end date
-- `cancelAtPeriodEnd` - Cancel flag
-
-**`user` table extension:**
-- `creemCustomerId` - Links user to Creem customer
-
-### Disable Persistence
-
-If you want to manage subscription data yourself:
+### Main Options
 
 ```typescript
-creem({
-  apiKey: process.env.CREEM_API_KEY!,
-  persistSubscriptions: false, // Disable database operations
-})
-```
+interface CreemOptions {
+  /** Creem API key (required) */
+  apiKey: string;
 
-## 🎯 Usage Examples
+  /** Webhook secret for signature verification */
+  webhookSecret?: string;
 
-### React Component
+  /** Use test mode (default: false) */
+  testMode?: boolean;
 
-```typescript
-"use client";
+  /** Default success URL for checkouts */
+  defaultSuccessUrl?: string;
 
-import { authClient } from "@/lib/auth-client";
-import { useState } from "react";
-import type { CreateCheckoutInput } from "@creem_io/better-auth";
+  /** Persist subscription data to database (default: true) */
+  persistSubscriptions?: boolean;
 
-export function SubscribeButton({ productId }: { productId: string }) {
-  const [loading, setLoading] = useState(false);
-  
-  const handleSubscribe = async () => {
-    setLoading(true);
-    
-    const { data, error } = await authClient.creem.createCheckout({
-      productId,
-      successUrl: "/dashboard",
-      metadata: {
-        source: "pricing-page"
-      }
-    });
-    
-    if (error) {
-      console.error(error);
-      setLoading(false);
-      return;
-    }
-    
-    if (data?.url) {
-      window.location.href = data.url;
-    }
-  };
-  
-  return (
-    <button onClick={handleSubscribe} disabled={loading}>
-      {loading ? "Loading..." : "Subscribe Now"}
-    </button>
-  );
+  // Webhook Handlers
+  onCheckoutCompleted?: (data: FlatCheckoutCompleted) => void;
+  onRefundCreated?: (data: FlatRefundCreated) => void;
+  onDisputeCreated?: (data: FlatDisputeCreated) => void;
+  onSubscriptionActive?: (
+    data: FlatSubscriptionEvent<"subscription.active">,
+  ) => void;
+  onSubscriptionTrialing?: (
+    data: FlatSubscriptionEvent<"subscription.trialing">,
+  ) => void;
+  onSubscriptionCanceled?: (
+    data: FlatSubscriptionEvent<"subscription.canceled">,
+  ) => void;
+  onSubscriptionPaid?: (
+    data: FlatSubscriptionEvent<"subscription.paid">,
+  ) => void;
+  onSubscriptionExpired?: (
+    data: FlatSubscriptionEvent<"subscription.expired">,
+  ) => void;
+  onSubscriptionUnpaid?: (
+    data: FlatSubscriptionEvent<"subscription.unpaid">,
+  ) => void;
+  onSubscriptionUpdate?: (
+    data: FlatSubscriptionEvent<"subscription.update">,
+  ) => void;
+  onSubscriptionPastDue?: (
+    data: FlatSubscriptionEvent<"subscription.past_due">,
+  ) => void;
+  onSubscriptionPaused?: (
+    data: FlatSubscriptionEvent<"subscription.paused">,
+  ) => void;
+
+  // Access Control (High-level)
+  onGrantAccess?: (context: GrantAccessContext) => void | Promise<void>;
+  onRevokeAccess?: (context: RevokeAccessContext) => void | Promise<void>;
 }
 ```
 
-### Next.js Server Action
+## 📚 Type Exports
+
+### Server-Side Types
 
 ```typescript
-"use server";
-
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-
-export async function createCheckoutSession(productId: string) {
-  const session = await auth.api.getSession({
-    headers: await headers()
-  });
-  
-  if (!session) {
-    return { error: "Not authenticated" };
-  }
-  
-  // Use auth endpoint directly on server
-  const result = await auth.api.creem.createCheckout({
-    body: {
-      productId,
-      successUrl: "/success"
-    },
-    headers: await headers()
-  });
-  
-  return result;
-}
+import type {
+  CreemOptions,
+  GrantAccessContext,
+  RevokeAccessContext,
+  GrantAccessReason,
+  RevokeAccessReason,
+  FlatCheckoutCompleted,
+  FlatRefundCreated,
+  FlatDisputeCreated,
+  FlatSubscriptionEvent,
+} from "@creem_io/better-auth";
 ```
 
-### Check Access in Middleware
+### Client-Side Types
 
 ```typescript
-import { auth } from "@/lib/auth";
-import { NextRequest, NextResponse } from "next/server";
-
-export async function middleware(request: NextRequest) {
-  const session = await auth.api.getSession({
-    headers: request.headers
-  });
-  
-  if (!session) {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-  
-  // Check subscription access
-  const { data } = await auth.api.creem.hasAccessGranted({
-    headers: request.headers
-  });
-  
-  if (!data?.hasAccess) {
-    return NextResponse.redirect(new URL("/subscribe", request.url));
-  }
-  
-  return NextResponse.next();
-}
-
-export const config = {
-  matcher: ["/dashboard/:path*"]
-};
+import type {
+  CreateCheckoutInput,
+  CreateCheckoutResponse,
+  CheckoutCustomer,
+  CreatePortalInput,
+  CreatePortalResponse,
+  CancelSubscriptionInput,
+  CancelSubscriptionResponse,
+  RetrieveSubscriptionInput,
+  SubscriptionData,
+  SearchTransactionsInput,
+  SearchTransactionsResponse,
+  TransactionData,
+  HasAccessGrantedResponse,
+} from "@creem_io/better-auth";
 ```
 
-## 🎨 TypeScript Tips
-
-### 1. Hover for Documentation
-Hover over any method to see full JSDoc documentation with examples:
+### Server Utility Types
 
 ```typescript
-authClient.creem.createCheckout(/* hover here for docs */);
+import type { CreemServerConfig } from "@creem_io/better-auth/server";
 ```
 
-### 2. Autocomplete
-Let TypeScript autocomplete show you available options:
+## 🎯 TypeScript Tips
 
-```typescript
-const { data } = await authClient.creem.createCheckout({
-  productId: "prod_123",
-  // Ctrl+Space here to see all available options
-});
-```
-
-### 3. Type Inference
-TypeScript automatically infers response types:
-
-```typescript
-const { data } = await authClient.creem.retrieveSubscription({ id: "sub_123" });
-// data is typed as SubscriptionData | null
-if (data) {
-  // TypeScript knows all properties of SubscriptionData
-  console.log(data.status);
-  console.log(data.product.name);
-}
-```
+1. **Hover for Documentation** - Hover over any method to see full JSDoc documentation
+2. **Autocomplete** - Let TypeScript suggest available options
+3. **Type Inference** - Response types are automatically inferred
+4. **Import Types** - Import types explicitly when needed for function parameters
 
 ## 🌍 Environment Variables
 
@@ -638,30 +718,53 @@ CREEM_API_KEY=your_api_key_here
 
 # Optional
 CREEM_WEBHOOK_SECRET=your_webhook_secret_here
-CREEM_TEST_MODE=true
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ## 🔧 Troubleshooting
 
-### "Invalid signature" error
-Make sure your webhook secret matches the one in your Creem dashboard.
+### Webhook Issues
 
-### TypeScript errors with generic types
-Use `createCreemAuthClient` instead of `createAuthClient` for cleaner types.
+- Check webhook URL is correct in Creem dashboard
+- Verify webhook signing secret matches
+- Ensure all necessary events are selected
+- Check server logs for errors
 
-### Database errors
-If you don't want database persistence, set `persistSubscriptions: false`.
+### Subscription Status Issues
 
-### Checkout URL not redirecting
-Make sure to check for `data?.url` before redirecting:
-```typescript
-if (data?.url) {
-  window.location.href = data.url;
-}
+- Make sure webhooks are being received
+- Check `creemCustomerId` and `creemSubscriptionId` fields are populated
+- Verify reference IDs match between app and Creem
+
+### Testing Webhooks Locally
+
+Use a tool like ngrok:
+
+```bash
+# Using ngrok
+ngrok http 3000
+
+# Then use the ngrok URL in Creem dashboard:
+# https://abc123.ngrok.io/api/auth/creem/webhook
 ```
 
-## 📚 Additional Resources
+### Database Mode Not Working
+
+- Ensure `persistSubscriptions: true` (default)
+- Run migrations: `npx @better-auth/cli migrate`
+- Check database connection
+- Verify schema tables exist
+
+### API Mode Limitations
+
+Some functions require database mode:
+
+- `checkSubscriptionAccess` with `userId`
+- `getActiveSubscriptions` with `userId`
+
+Either enable database mode or implement custom logic with the Creem SDK directly.
+
+## 📖 Additional Resources
 
 - [Creem Documentation](https://docs.creem.io)
 - [Better-Auth Documentation](https://better-auth.com)
@@ -674,5 +777,6 @@ MIT
 ## 🤝 Support
 
 For issues or questions:
+
 - Open an issue on [GitHub](https://github.com/armitage-labs/creem-betterauth/issues)
 - Contact Creem support at [support@creem.io](mailto:support@creem.io)

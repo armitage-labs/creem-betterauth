@@ -25,6 +25,11 @@
       "types": "./dist/create-creem-auth-client.d.ts",
       "import": "./dist/create-creem-auth-client.js",
       "require": "./dist/create-creem-auth-client.js"
+    },
+    "./server": {
+      "types": "./dist/creem-server.d.ts",
+      "import": "./dist/creem-server.js",
+      "require": "./dist/creem-server.js"
     }
   },
   "files": [
