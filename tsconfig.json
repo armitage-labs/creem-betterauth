@@ -4,21 +4,25 @@
     "module": "ESNext",
     "lib": ["ES2020"],
     "moduleResolution": "bundler",
+    "outDir": "./dist",
+    "rootDir": "./",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
     "types": ["node"]
   },
   "include": [
-    "*.ts",
-    "**/*.ts"
+    "*.ts"
   ],
   "exclude": [
     "node_modules",
-    "test"
+    "test",
+    "dist"
   ]
 }

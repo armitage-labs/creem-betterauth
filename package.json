@@ -2,32 +2,35 @@
   "name": "@creem_io/better-auth",
   "version": "0.0.1",
   "description": "Creem official Better-Auth plugin",
-  "main": "index.ts",
-  "types": "index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
+    "build": "tsc",
     "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "exports": {
     ".": {
-      "types": "./index.ts",
-      "import": "./index.ts",
-      "require": "./index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
     },
     "./client": {
-      "types": "./client.ts",
-      "import": "./client.ts",
-      "require": "./client.ts"
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js",
+      "require": "./dist/client.js"
     },
     "./create-creem-auth-client": {
-      "types": "./create-creem-auth-client.ts",
-      "import": "./create-creem-auth-client.ts",
-      "require": "./create-creem-auth-client.ts"
+      "types": "./dist/create-creem-auth-client.d.ts",
+      "import": "./dist/create-creem-auth-client.js",
+      "require": "./dist/create-creem-auth-client.js"
     }
   },
   "files": [
-    "*.ts",
-    "*-types.ts",
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
     "README.md"
   ],
   "repository": {

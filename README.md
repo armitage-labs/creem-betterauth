@@ -23,6 +23,8 @@ npm install @creem_io/better-auth better-auth creem
 - `creem` ^0.4.0 (included)
 - `zod` ^3.23.8 (included)
 
+**Note:** TypeScript types are automatically included via `.d.ts` declaration files - no additional `@types` packages needed!
+
 ## 🚀 Quick Start
 
 ### Server Setup
