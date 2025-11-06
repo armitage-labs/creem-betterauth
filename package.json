@@ -2,6 +2,7 @@
   "name": "@creem_io/better-auth",
   "version": "0.0.3",
   "description": "Creem official Better-Auth plugin",
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -13,23 +14,23 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "require": "./dist/index.js",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./client": {
       "types": "./dist/client.d.ts",
-      "require": "./dist/client.js",
-      "import": "./dist/client.js"
+      "import": "./dist/client.js",
+      "default": "./dist/client.js"
     },
     "./create-creem-auth-client": {
       "types": "./dist/create-creem-auth-client.d.ts",
-      "require": "./dist/create-creem-auth-client.js",
-      "import": "./dist/create-creem-auth-client.js"
+      "import": "./dist/create-creem-auth-client.js",
+      "default": "./dist/create-creem-auth-client.js"
     },
     "./server": {
       "types": "./dist/creem-server.d.ts",
-      "require": "./dist/creem-server.js",
-      "import": "./dist/creem-server.js"
+      "import": "./dist/creem-server.js",
+      "default": "./dist/creem-server.js"
     }
   },
   "files": [
@@ -56,11 +57,6 @@
     "url": "https://github.com/armitage-labs/creem-betterauth/issues"
   },
   "homepage": "https://github.com/armitage-labs/creem-betterauth#readme",
-  "dependencies": {
-    "better-auth": "^1.3.34",
-    "creem": "^0.4.0",
-    "zod": "^3.23.8"
-  },
   "devDependencies": {
     "@types/node": "^20",
     "better-sqlite3": "^12.4.1",
@@ -69,6 +65,8 @@
     "typescript": "^5"
   },
   "peerDependencies": {
-    "better-auth": "^1.3.34"
+    "better-auth": "^1.3.34",
+    "zod": "^3.23.8 || ^4",
+    "creem": "^0.4.0"
   }
 }
