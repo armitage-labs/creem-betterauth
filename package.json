@@ -2,41 +2,45 @@
   "name": "@creem_io/better-auth",
   "version": "0.0.4",
   "description": "Creem official Better-Auth plugin",
-  "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build:cjs && npm run build:esm && npm run build:package-json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:package-json": "echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json && echo '{\"type\":\"module\"}' > dist/esm/package.json",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
+      "types": "./dist/esm/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
     },
     "./client": {
-      "types": "./dist/client.d.ts",
-      "import": "./dist/client.js",
-      "default": "./dist/client.js"
+      "types": "./dist/esm/client.d.ts",
+      "import": "./dist/esm/client.js",
+      "require": "./dist/cjs/client.js"
     },
     "./create-creem-auth-client": {
-      "types": "./dist/create-creem-auth-client.d.ts",
-      "import": "./dist/create-creem-auth-client.js",
-      "default": "./dist/create-creem-auth-client.js"
+      "types": "./dist/esm/create-creem-auth-client.d.ts",
+      "import": "./dist/esm/create-creem-auth-client.js",
+      "require": "./dist/cjs/create-creem-auth-client.js"
     },
     "./server": {
-      "types": "./dist/creem-server.d.ts",
-      "import": "./dist/creem-server.js",
-      "default": "./dist/creem-server.js"
+      "types": "./dist/esm/creem-server.d.ts",
+      "import": "./dist/esm/creem-server.js",
+      "require": "./dist/cjs/creem-server.js"
     }
   },
   "files": [
     "dist/**/*.js",
     "dist/**/*.d.ts",
     "dist/**/*.d.ts.map",
+    "dist/**/package.json",
     "README.md"
   ],
   "repository": {
