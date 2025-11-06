@@ -54,10 +54,6 @@ export type {
 // Export access check types
 export type { HasAccessGrantedResponse } from "./has-active-subscription-types";
 
-// Export enhanced client types
-export type { CreemClient } from "./create-creem-auth-client";
-export { createCreemAuthClient } from "./create-creem-auth-client";
-
 // Export server utilities and types
 export type { CreemServerConfig } from "./creem-server";
 export {
