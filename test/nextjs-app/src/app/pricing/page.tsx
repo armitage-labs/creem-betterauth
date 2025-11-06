@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -55,7 +56,7 @@ export default function Pricing() {
 
   const plans = [
     {
-      id: "prod_5envUXiatjlEiyMzvzc1RQ",
+      id: "add-your-product-id-here",
       name: "Starter",
       price: "$9",
       period: "month",
@@ -67,7 +68,7 @@ export default function Pricing() {
       ],
     },
     {
-      id: "prod_pro",
+      id: "add-your-product-id-here",
       name: "Pro",
       price: "$29",
       period: "month",
@@ -81,7 +82,7 @@ export default function Pricing() {
       popular: true,
     },
     {
-      id: "prod_enterprise",
+      id: "add-your-product-id-here",
       name: "Enterprise",
       price: "$99",
       period: "month",
