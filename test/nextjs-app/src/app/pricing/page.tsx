@@ -55,7 +55,7 @@ export default function Pricing() {
 
   const plans = [
     {
-      id: "prod_6dxNuqALgPC6VrOriZvy8v",
+      id: "prod_5envUXiatjlEiyMzvzc1RQ",
       name: "Starter",
       price: "$9",
       period: "month",

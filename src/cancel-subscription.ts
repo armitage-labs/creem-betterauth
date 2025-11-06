@@ -9,10 +9,23 @@ import type {
 } from "./cancel-subscription-types";
 
 export const CancelSubscriptionParams = z.object({
-  id: z.string(),
+  id: z.string().optional(),
 });
 
 export type CancelSubscriptionParams = z.infer<typeof CancelSubscriptionParams>;
+
+interface Subscription {
+  id: string;
+  productId: string;
+  referenceId: string;
+  creemCustomerId?: string;
+  creemSubscriptionId?: string;
+  creemOrderId?: string;
+  status: string;
+  periodStart?: Date;
+  periodEnd?: Date;
+  cancelAtPeriodEnd?: boolean;
+}
 
 // Re-export types for convenience
 export type { CancelSubscriptionInput, CancelSubscriptionResponse };
@@ -31,9 +44,62 @@ const createCancelSubscriptionHandler = (
         return ctx.json({ error: "User must be logged in" }, { status: 400 });
       }
 
+      let subscriptionId = body.id;
+
+      // Check if database persistence is enabled
+      const shouldPersist = options.persistSubscriptions !== false;
+
+      if (shouldPersist) {
+        // If database persistence is enabled, fetch the user's subscription from the database
+        const userId = session.user.id;
+
+        // Find all subscriptions for this user
+        const subscriptions = await ctx.context.adapter.findMany<Subscription>({
+          model: "subscription",
+          where: [{ field: "referenceId", value: userId }],
+        });
+
+        if (subscriptions && subscriptions.length > 0) {
+          // Find an active subscription (active, trialing, or any non-expired subscription)
+          const activeSubscription = subscriptions.find(
+            (sub) =>
+              sub.status === "active" ||
+              sub.status === "trialing" ||
+              sub.status === "unpaid" ||
+              sub.status === "past_due"
+          );
+
+          if (activeSubscription && activeSubscription.creemSubscriptionId) {
+            // Use the subscription ID from the database
+            subscriptionId = activeSubscription.creemSubscriptionId;
+          } else if (!subscriptionId) {
+            // If no active subscription and no ID provided, return error
+            return ctx.json(
+              { error: "No active subscription found for this user" },
+              { status: 404 }
+            );
+          }
+        } else if (!subscriptionId) {
+          // No subscriptions in database and no ID provided
+          return ctx.json(
+            { error: "No subscription found for this user" },
+            { status: 404 }
+          );
+        }
+      } else if (!subscriptionId) {
+        // If persistence is disabled and no ID provided, return error
+        return ctx.json(
+          {
+            error:
+              "Subscription ID is required when database persistence is disabled",
+          },
+          { status: 400 }
+        );
+      }
+
       await creem.cancelSubscription({
         xApiKey: options.apiKey,
-        id: body.id,
+        id: subscriptionId,
       });
 
       return ctx.json({
@@ -57,6 +123,12 @@ const createCancelSubscriptionHandler = (
  * canceled immediately or at the end of the current billing period,
  * depending on your Creem settings.
  *
+ * **Behavior:**
+ * - If database persistence is enabled (persistSubscriptions: true), the endpoint
+ *   will automatically find the authenticated user's active subscription and cancel it.
+ *   The `id` parameter is optional in this case.
+ * - If database persistence is disabled, the `id` parameter is required.
+ *
  * @param creem - The Creem client instance
  * @param options - Plugin configuration options
  * @returns BetterAuth endpoint configuration
@@ -64,7 +136,18 @@ const createCancelSubscriptionHandler = (
  * @endpoint POST /creem/cancel-subscription
  *
  * @example
- * Client-side usage:
+ * Client-side usage with database persistence enabled (id is optional):
+ * ```typescript
+ * // Cancels the authenticated user's active subscription
+ * const { data, error } = await authClient.creem.cancelSubscription({});
+ *
+ * if (data?.success) {
+ *   console.log(data.message); // "Subscription cancelled successfully"
+ * }
+ * ```
+ *
+ * @example
+ * Client-side usage with explicit subscription ID:
  * ```typescript
  * const { data, error } = await authClient.creem.cancelSubscription({
  *   id: "sub_abc123"
