@@ -136,4 +136,3 @@ export const creem = (options: CreemOptions) => {
   } satisfies BetterAuthPlugin;
 };
 
-module.exports = { creem };
