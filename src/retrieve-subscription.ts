@@ -2,11 +2,11 @@ import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
 import type { GenericEndpointContext } from "better-auth";
 import { Creem } from "creem";
 import { z } from "zod";
-import type { CreemOptions } from "./types";
+import type { CreemOptions } from "./types.js";
 import type {
   RetrieveSubscriptionInput,
   SubscriptionData,
-} from "./retrieve-subscription-types";
+} from "./retrieve-subscription-types.js";
 
 export const RetrieveSubscriptionParams = z.object({
   id: z.string().optional(),

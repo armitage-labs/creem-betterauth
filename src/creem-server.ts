@@ -1,13 +1,13 @@
 import { Creem } from "creem";
-import type { CreemOptions } from "./types";
+import type { CreemOptions } from "./types.js";
 import type {
   CreateCheckoutInput,
   CreateCheckoutResponse,
-} from "./checkout-types";
-import type { CreatePortalResponse } from "./portal-types";
-import type { SubscriptionData } from "./retrieve-subscription-types";
-import type { SearchTransactionsResponse } from "./search-transactions-types";
-import { generateSignature } from "./utils";
+} from "./checkout-types.js";
+import type { CreatePortalResponse } from "./portal-types.js";
+import type { SubscriptionData } from "./retrieve-subscription-types.js";
+import type { SearchTransactionsResponse } from "./search-transactions-types.js";
+import { generateSignature } from "./utils.js";
 
 /**
  * Configuration for server-side Creem operations.
@@ -597,4 +597,3 @@ export async function getActiveSubscriptions(
 
   return [];
 }
-

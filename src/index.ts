@@ -1,14 +1,14 @@
 import { BetterAuthPlugin } from "better-auth";
 import { Creem } from "creem";
-import { getSchema } from "./schema";
-import { createCheckoutEndpoint } from "./checkout";
-import { createPortalEndpoint } from "./portal";
-import { createCancelSubscriptionEndpoint } from "./cancel-subscription";
-import { createRetrieveSubscriptionEndpoint } from "./retrieve-subscription";
-import { createSearchTransactionsEndpoint } from "./search-transactions";
-import { createHasAccessGrantedEndpoint } from "./has-active-subscription";
-import { createWebhookEndpoint } from "./webhook";
-import { CreemOptions } from "./types";
+import { getSchema } from "./schema.js";
+import { createCheckoutEndpoint } from "./checkout.js";
+import { createPortalEndpoint } from "./portal.js";
+import { createCancelSubscriptionEndpoint } from "./cancel-subscription.js";
+import { createRetrieveSubscriptionEndpoint } from "./retrieve-subscription.js";
+import { createSearchTransactionsEndpoint } from "./search-transactions.js";
+import { createHasAccessGrantedEndpoint } from "./has-active-subscription.js";
+import { createWebhookEndpoint } from "./webhook.js";
+import { CreemOptions } from "./types.js";
 
 // Export plugin configuration types
 export type {
@@ -21,41 +21,41 @@ export type {
   FlatRefundCreated,
   FlatDisputeCreated,
   FlatSubscriptionEvent,
-} from "./types";
+} from "./types.js";
 
 // Export checkout types
 export type {
   CreateCheckoutInput,
   CreateCheckoutResponse,
   CheckoutCustomer,
-} from "./checkout-types";
+} from "./checkout-types.js";
 
 // Export portal types
-export type { CreatePortalInput, CreatePortalResponse } from "./portal-types";
+export type { CreatePortalInput, CreatePortalResponse } from "./portal-types.js";
 
 // Export subscription types
 export type {
   CancelSubscriptionInput,
   CancelSubscriptionResponse,
-} from "./cancel-subscription-types";
+} from "./cancel-subscription-types.js";
 
 export type {
   RetrieveSubscriptionInput,
   SubscriptionData,
-} from "./retrieve-subscription-types";
+} from "./retrieve-subscription-types.js";
 
 // Export transaction types
 export type {
   SearchTransactionsInput,
   SearchTransactionsResponse,
   TransactionData,
-} from "./search-transactions-types";
+} from "./search-transactions-types.js";
 
 // Export access check types
-export type { HasAccessGrantedResponse } from "./has-active-subscription-types";
+export type { HasAccessGrantedResponse } from "./has-active-subscription-types.js";
 
 // Export server utilities and types
-export type { CreemServerConfig } from "./creem-server";
+export type { CreemServerConfig } from "./creem-server.js";
 export {
   createCreemClient,
   isActiveSubscription,
@@ -69,7 +69,7 @@ export {
   searchTransactions,
   checkSubscriptionAccess,
   getActiveSubscriptions,
-} from "./creem-server";
+} from "./creem-server.js";
 
 /**
  * Creem Better-Auth plugin for payment and subscription management.
@@ -135,5 +135,3 @@ export const creem = (options: CreemOptions) => {
     schema: getSchema(options),
   } satisfies BetterAuthPlugin;
 };
-
-module.exports = { creem };

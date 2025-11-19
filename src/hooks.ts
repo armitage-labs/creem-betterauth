@@ -12,8 +12,8 @@ import type {
   NormalizedSubscriptionPausedEvent,
   NormalizedSubscriptionEntity,
   SubscriptionStatus,
-} from "./webhook-types";
-import type { CreemOptions } from "./types";
+} from "./webhook-types.js";
+import type { CreemOptions } from "./types.js";
 
 interface Subscription {
   id: string;

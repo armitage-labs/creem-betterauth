@@ -2,12 +2,12 @@ import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
 import type { GenericEndpointContext } from "better-auth";
 import { Creem } from "creem";
 import { z } from "zod";
-import type { CreemOptions } from "./types";
+import type { CreemOptions } from "./types.js";
 import type {
   SearchTransactionsInput,
   SearchTransactionsResponse,
   TransactionData,
-} from "./search-transactions-types";
+} from "./search-transactions-types.js";
 
 export const SearchTransactionsParams = z.object({
   customerId: z.string().optional(),

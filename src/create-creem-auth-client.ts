@@ -1,10 +1,10 @@
 import { createAuthClient } from "better-auth/react";
-import type { CreateCheckoutInput, CreateCheckoutResponse } from "./checkout-types";
-import type { CreatePortalInput, CreatePortalResponse } from "./portal-types";
-import type { CancelSubscriptionInput, CancelSubscriptionResponse } from "./cancel-subscription-types";
-import type { RetrieveSubscriptionInput, SubscriptionData } from "./retrieve-subscription-types";
-import type { SearchTransactionsInput, SearchTransactionsResponse } from "./search-transactions-types";
-import type { HasAccessGrantedResponse } from "./has-active-subscription-types";
+import type { CreateCheckoutInput, CreateCheckoutResponse } from "./checkout-types.js";
+import type { CreatePortalInput, CreatePortalResponse } from "./portal-types.js";
+import type { CancelSubscriptionInput, CancelSubscriptionResponse } from "./cancel-subscription-types.js";
+import type { RetrieveSubscriptionInput, SubscriptionData } from "./retrieve-subscription-types.js";
+import type { SearchTransactionsInput, SearchTransactionsResponse } from "./search-transactions-types.js";
+import type { HasAccessGrantedResponse } from "./has-active-subscription-types.js";
 
 /**
  * Standard Better-Auth response type
@@ -215,4 +215,3 @@ export function createCreemAuthClient(
     creem: CreemClient;
   };
 }
-

@@ -2,12 +2,12 @@ import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
 import type { GenericEndpointContext } from "better-auth";
 import { Creem } from "creem";
 import { z } from "zod";
-import type { CreemOptions } from "./types";
-import { resolveSuccessUrl } from "./utils";
+import type { CreemOptions } from "./types.js";
+import { resolveSuccessUrl } from "./utils.js";
 import type {
   CreateCheckoutInput,
   CreateCheckoutResponse,
-} from "./checkout-types";
+} from "./checkout-types.js";
 
 export const CheckoutParams = z.object({
   productId: z.string(),

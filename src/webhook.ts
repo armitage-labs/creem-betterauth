@@ -1,7 +1,7 @@
 import { createAuthEndpoint } from "better-auth/api";
 import type { GenericEndpointContext } from "better-auth";
-import type { CreemOptions } from "./types";
-import { generateSignature, parseWebhookEvent } from "./utils";
+import type { CreemOptions } from "./types.js";
+import { generateSignature, parseWebhookEvent } from "./utils.js";
 import {
   onCheckoutCompleted,
   onSubscriptionActive,
@@ -13,7 +13,7 @@ import {
   onSubscriptionUpdate,
   onSubscriptionPastDue,
   onSubscriptionPaused,
-} from "./hooks";
+} from "./hooks.js";
 
 const createWebhookHandler = (options: CreemOptions) => {
   return async (ctx: GenericEndpointContext) => {
