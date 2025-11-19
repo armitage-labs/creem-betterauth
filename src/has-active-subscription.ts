@@ -1,8 +1,8 @@
 import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
 import type { GenericEndpointContext } from "better-auth";
 import { z } from "zod";
-import type { CreemOptions } from "./types";
-import { SubscriptionStatus } from "./webhook-types";
+import type { CreemOptions } from "./types.js";
+import { SubscriptionStatus } from "./webhook-types.js";
 
 // No input needed - uses session to get user ID
 export const HasAccessGrantedParams = z.object({}).optional();

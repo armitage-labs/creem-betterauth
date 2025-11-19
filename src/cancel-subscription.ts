@@ -2,11 +2,11 @@ import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
 import type { GenericEndpointContext } from "better-auth";
 import { Creem } from "creem";
 import { z } from "zod";
-import type { CreemOptions } from "./types";
+import type { CreemOptions } from "./types.js";
 import type {
   CancelSubscriptionInput,
   CancelSubscriptionResponse,
-} from "./cancel-subscription-types";
+} from "./cancel-subscription-types.js";
 
 export const CancelSubscriptionParams = z.object({
   id: z.string().optional(),

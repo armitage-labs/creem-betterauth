@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import type { GenericEndpointContext } from "better-auth";
-import { isWebhookEventEntity, NormalizedWebhookEvent } from "./webhook-types";
+import { isWebhookEventEntity, NormalizedWebhookEvent } from "./webhook-types.js";
 
 export function generateSignature(payload: string, secret: string): string {
   const computedSignature = crypto

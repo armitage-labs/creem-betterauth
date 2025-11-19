@@ -1,5 +1,5 @@
 import type { BetterAuthClientPlugin } from "better-auth";
-import type { creem } from ".";
+import type { creem } from "./index.js";
 
 /**
  * Creem client plugin for Better-Auth.
@@ -41,24 +41,24 @@ export type {
   CreateCheckoutInput,
   CreateCheckoutResponse,
   CheckoutCustomer,
-} from "./checkout-types";
+} from "./checkout-types.js";
 
-export type { CreatePortalInput, CreatePortalResponse } from "./portal-types";
+export type { CreatePortalInput, CreatePortalResponse } from "./portal-types.js";
 
 export type {
   CancelSubscriptionInput,
   CancelSubscriptionResponse,
-} from "./cancel-subscription-types";
+} from "./cancel-subscription-types.js";
 
 export type {
   RetrieveSubscriptionInput,
   SubscriptionData,
-} from "./retrieve-subscription-types";
+} from "./retrieve-subscription-types.js";
 
 export type {
   SearchTransactionsInput,
   SearchTransactionsResponse,
   TransactionData,
-} from "./search-transactions-types";
+} from "./search-transactions-types.js";
 
-export type { HasAccessGrantedResponse } from "./has-active-subscription-types";
+export type { HasAccessGrantedResponse } from "./has-active-subscription-types.js";
