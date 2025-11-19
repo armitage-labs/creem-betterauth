@@ -1,7 +1,7 @@
 import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
 import type { GenericEndpointContext } from "better-auth";
-import type { CreemOptions } from "./types";
-import type { CreatePortalInput, CreatePortalResponse } from "./portal-types";
+import type { CreemOptions } from "./types.js";
+import type { CreatePortalInput, CreatePortalResponse } from "./portal-types.js";
 
 // Re-export types for convenience
 export type { CreatePortalInput, CreatePortalResponse };
