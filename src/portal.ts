@@ -1,14 +1,21 @@
 import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
 import type { GenericEndpointContext } from "better-auth";
+import { z } from "zod";
 import type { CreemOptions } from "./types.js";
 import type { CreatePortalInput, CreatePortalResponse } from "./portal-types.js";
+
+export const PortalParams = z.object({
+  customerId: z.string().optional(),
+});
+
+export type PortalParams = z.infer<typeof PortalParams>;
 
 // Re-export types for convenience
 export type { CreatePortalInput, CreatePortalResponse };
 
 const createPortalHandler = (serverURL: string, options: CreemOptions) => {
   return async (ctx: GenericEndpointContext) => {
-    const body = ctx.body;
+    const body = (ctx.body || {}) as PortalParams;
 
     try {
       const session = await getSessionFromCtx(ctx);
@@ -88,6 +95,7 @@ export const createPortalEndpoint = (
     "/creem/create-portal",
     {
       method: "POST",
+      body: PortalParams,
     },
     createPortalHandler(serverURL, options)
   );
