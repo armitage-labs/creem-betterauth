@@ -33,6 +33,9 @@ export const creemClient = () => {
   return {
     id: "creem",
     $InferServerPlugin: {} as ReturnType<typeof creem>,
+    pathMethods: {
+      "/creem/create-portal": "POST",
+    },
   } satisfies BetterAuthClientPlugin;
 };
 

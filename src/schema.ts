@@ -3,7 +3,7 @@ import { mergeSchema } from "better-auth/db";
 import { CreemOptions } from "./types.js";
 
 export const subscriptions = {
-  subscription: {
+  creem_subscription: {
     fields: {
       productId: {
         type: "string",

@@ -472,7 +472,7 @@ export async function checkSubscriptionAccess(
     try {
       const subscriptions = await options.database
         .select()
-        .from("subscription")
+        .from("creem_subscription")
         .where("referenceId", "=", options.userId);
 
       const activeSubscription = subscriptions.find(
@@ -560,7 +560,7 @@ export async function getActiveSubscriptions(
     try {
       const subscriptions = await options.database
         .select()
-        .from("subscription")
+        .from("creem_subscription")
         .where("referenceId", "=", options.userId);
 
       return subscriptions
