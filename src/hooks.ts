@@ -125,10 +125,9 @@ export async function onCheckoutCompleted(
         };
 
         // Try to find existing subscription by creemSubscriptionId or referenceId + productId
-        console.log("onCheckoutCompleted: Fetching existing subscription");
         const existingSubscription =
           await ctx.context.adapter.findOne<Subscription>({
-            model: "subscription",
+            model: "creem_subscription",
             where: [
               { field: "creemSubscriptionId", value: subscriptionData.id },
             ],
@@ -136,9 +135,8 @@ export async function onCheckoutCompleted(
 
         if (existingSubscription) {
           // Update existing subscription
-          console.log("onCheckoutCompleted: Updating existing subscription");
           await ctx.context.adapter.update({
-            model: "subscription",
+            model: "creem_subscription",
             where: [{ field: "id", value: existingSubscription.id }],
             update: subscriptionUpdate,
           });
@@ -147,10 +145,9 @@ export async function onCheckoutCompleted(
           );
         } else {
           // Create new subscription
-          console.log("onCheckoutCompleted: Creating new subscription");
           const newSubscription =
             await ctx.context.adapter.create<Subscription>({
-              model: "subscription",
+              model: "creem_subscription",
               data: subscriptionUpdate,
             });
           logger.info(
@@ -318,14 +315,14 @@ async function updateSubscriptionFromEvent(
 
     // Find subscription by creemSubscriptionId
     let subscription = await ctx.context.adapter.findOne<Subscription>({
-      model: "subscription",
+      model: "creem_subscription",
       where: [{ field: "creemSubscriptionId", value: subscriptionData.id }],
     });
 
     // If not found by creemSubscriptionId, try to find by creemCustomerId and productId
     if (!subscription && customerId) {
       const subscriptions = await ctx.context.adapter.findMany<Subscription>({
-        model: "subscription",
+        model: "creem_subscription",
         where: [{ field: "creemCustomerId", value: customerId }],
       });
 
@@ -358,7 +355,7 @@ async function updateSubscriptionFromEvent(
 
     // Update subscription
     await ctx.context.adapter.update({
-      model: "subscription",
+      model: "creem_subscription",
       where: [{ field: "id", value: subscription.id }],
       update: updateData,
     });

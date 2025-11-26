@@ -57,7 +57,7 @@ const createRetrieveSubscriptionHandler = (
 
         // Find all subscriptions for this user
         const subscriptions = await ctx.context.adapter.findMany<Subscription>({
-          model: "subscription",
+          model: "creem_subscription",
           where: [{ field: "referenceId", value: userId }],
         });
 
