@@ -2,7 +2,10 @@ import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
 import type { GenericEndpointContext } from "better-auth";
 import { z } from "zod";
 import type { CreemOptions } from "./types.js";
-import type { CreatePortalInput, CreatePortalResponse } from "./portal-types.js";
+import type {
+  CreatePortalInput,
+  CreatePortalResponse,
+} from "./portal-types.js";
 
 export const PortalParams = z.object({
   customerId: z.string().optional(),
@@ -27,7 +30,7 @@ const createPortalHandler = (serverURL: string, options: CreemOptions) => {
       if (!session?.user.creemCustomerId) {
         return ctx.json(
           { error: "User must have a Creem customer ID" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -46,14 +49,15 @@ const createPortalHandler = (serverURL: string, options: CreemOptions) => {
         throw new Error(`Creem API error: ${response.statusText}`);
       }
 
-      const portal = await response.json() as { customer_portal_link: string };
+      const portal = (await response.json()) as {
+        customer_portal_link: string;
+      };
 
       return ctx.json({
         url: portal.customer_portal_link,
         redirect: true,
       });
     } catch (error) {
-      console.error("Creem portal error:", error);
       return ctx.json({ error: "Failed to create portal" }, { status: 500 });
     }
   };
@@ -89,7 +93,7 @@ const createPortalHandler = (serverURL: string, options: CreemOptions) => {
  */
 export const createPortalEndpoint = (
   serverURL: string,
-  options: CreemOptions
+  options: CreemOptions,
 ) => {
   return createAuthEndpoint(
     "/creem/create-portal",
@@ -97,6 +101,6 @@ export const createPortalEndpoint = (
       method: "POST",
       body: PortalParams,
     },
-    createPortalHandler(serverURL, options)
+    createPortalHandler(serverURL, options),
   );
 };

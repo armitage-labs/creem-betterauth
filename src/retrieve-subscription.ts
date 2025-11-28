@@ -34,7 +34,7 @@ export type { RetrieveSubscriptionInput, SubscriptionData };
 
 const createRetrieveSubscriptionHandler = (
   creem: Creem,
-  options: CreemOptions
+  options: CreemOptions,
 ) => {
   return async (ctx: GenericEndpointContext) => {
     const body = ctx.body as RetrieveSubscriptionParams;
@@ -72,14 +72,14 @@ const createRetrieveSubscriptionHandler = (
             // If subscription doesn't have a Creem ID and no ID provided, return error
             return ctx.json(
               { error: "No subscription found for this user" },
-              { status: 404 }
+              { status: 404 },
             );
           }
         } else if (!subscriptionId) {
           // No subscriptions in database and no ID provided
           return ctx.json(
             { error: "No subscription found for this user" },
-            { status: 404 }
+            { status: 404 },
           );
         }
       } else if (!subscriptionId) {
@@ -89,7 +89,7 @@ const createRetrieveSubscriptionHandler = (
             error:
               "Subscription ID is required when database persistence is disabled",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -100,10 +100,9 @@ const createRetrieveSubscriptionHandler = (
 
       return ctx.json(subscription);
     } catch (error) {
-      console.error("Creem retrieve subscription error:", error);
       return ctx.json(
         { error: "Failed to retrieve subscription" },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };
@@ -156,7 +155,7 @@ const createRetrieveSubscriptionHandler = (
  */
 export const createRetrieveSubscriptionEndpoint = (
   creem: Creem,
-  options: CreemOptions
+  options: CreemOptions,
 ) => {
   return createAuthEndpoint(
     "/creem/retrieve-subscription",
@@ -164,6 +163,6 @@ export const createRetrieveSubscriptionEndpoint = (
       method: "POST",
       body: RetrieveSubscriptionParams,
     },
-    createRetrieveSubscriptionHandler(creem, options)
+    createRetrieveSubscriptionHandler(creem, options),
   );
 };

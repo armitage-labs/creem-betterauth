@@ -28,7 +28,7 @@ export type {
 
 const createSearchTransactionsHandler = (
   creem: Creem,
-  options: CreemOptions
+  options: CreemOptions,
 ) => {
   return async (ctx: GenericEndpointContext) => {
     const body = ctx.body as SearchTransactionsParams;
@@ -46,7 +46,7 @@ const createSearchTransactionsHandler = (
       if (!customerId) {
         return ctx.json(
           { error: "User must have a Creem customer ID" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -61,10 +61,9 @@ const createSearchTransactionsHandler = (
 
       return ctx.json(transactions);
     } catch (error) {
-      console.error("Creem search transactions error:", error);
       return ctx.json(
         { error: "Failed to search transactions" },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };
@@ -105,7 +104,7 @@ const createSearchTransactionsHandler = (
  */
 export const createSearchTransactionsEndpoint = (
   creem: Creem,
-  options: CreemOptions
+  options: CreemOptions,
 ) => {
   return createAuthEndpoint(
     "/creem/search-transactions",
@@ -113,6 +112,6 @@ export const createSearchTransactionsEndpoint = (
       method: "POST",
       body: SearchTransactionsParams,
     },
-    createSearchTransactionsHandler(creem, options)
+    createSearchTransactionsHandler(creem, options),
   );
 };

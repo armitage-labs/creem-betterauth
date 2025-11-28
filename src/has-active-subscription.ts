@@ -33,7 +33,7 @@ const createHasAccessGrantedHandler = (options: CreemOptions) => {
             hasAccessGranted: undefined,
             message: "User must be logged in to check subscription status",
           },
-          { status: 401 }
+          { status: 401 },
         );
       }
 
@@ -47,7 +47,7 @@ const createHasAccessGrantedHandler = (options: CreemOptions) => {
             message:
               "Database persistence is disabled. Enable 'persistSubscriptions' option or implement custom subscription checking.",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -120,14 +120,13 @@ const createHasAccessGrantedHandler = (options: CreemOptions) => {
         })),
       });
     } catch (error) {
-      console.error("Error checking active subscription:", error);
       return ctx.json(
         {
           hasAccessGranted: undefined,
           message: "Failed to check subscription status",
           error: error instanceof Error ? error.message : String(error),
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };
@@ -139,6 +138,6 @@ export const createHasAccessGrantedEndpoint = (options: CreemOptions) => {
     {
       method: "GET",
     },
-    createHasAccessGrantedHandler(options)
+    createHasAccessGrantedHandler(options),
   );
 };
