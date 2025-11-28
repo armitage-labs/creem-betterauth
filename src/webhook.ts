@@ -40,7 +40,6 @@ const createWebhookHandler = (options: CreemOptions) => {
       // We flatten the structure for easier destructuring in callbacks
       switch (event.eventType) {
         case "checkout.completed":
-          console.log("Checkout completed", event);
           await onCheckoutCompleted(ctx, event, options);
           options.onCheckoutCompleted?.({
             webhookEventType: event.eventType,
@@ -51,7 +50,6 @@ const createWebhookHandler = (options: CreemOptions) => {
           break;
 
         case "refund.created":
-          console.log("Refund created");
           options.onRefundCreated?.({
             webhookEventType: event.eventType,
             webhookId: event.id,
@@ -61,7 +59,6 @@ const createWebhookHandler = (options: CreemOptions) => {
           break;
 
         case "dispute.created":
-          console.log("Dispute created");
           options.onDisputeCreated?.({
             webhookEventType: event.eventType,
             webhookId: event.id,
@@ -71,7 +68,6 @@ const createWebhookHandler = (options: CreemOptions) => {
           break;
 
         case "subscription.active":
-          console.log("Subscription active");
           await onSubscriptionActive(ctx, event, options);
           options.onGrantAccess?.({
             reason: "subscription_active",
@@ -86,7 +82,6 @@ const createWebhookHandler = (options: CreemOptions) => {
           break;
 
         case "subscription.trialing":
-          console.log("Subscription trialing");
           await onSubscriptionTrialing(ctx, event, options);
           options.onGrantAccess?.({
             reason: "subscription_trialing",
@@ -101,7 +96,6 @@ const createWebhookHandler = (options: CreemOptions) => {
 
           break;
         case "subscription.canceled":
-          console.log("Subscription canceled");
           await onSubscriptionCanceled(ctx, event, options);
           options.onSubscriptionCanceled?.({
             webhookEventType: event.eventType,
@@ -112,7 +106,6 @@ const createWebhookHandler = (options: CreemOptions) => {
           break;
 
         case "subscription.paid":
-          console.log("Subscription paid");
           await onSubscriptionPaid(ctx, event, options);
           options.onGrantAccess?.({
             reason: "subscription_paid",
@@ -127,7 +120,6 @@ const createWebhookHandler = (options: CreemOptions) => {
           break;
 
         case "subscription.expired":
-          console.log("Subscription expired");
           await onSubscriptionExpired(ctx, event, options);
           options.onRevokeAccess?.({
             reason: "subscription_expired",
@@ -142,7 +134,6 @@ const createWebhookHandler = (options: CreemOptions) => {
           break;
 
         case "subscription.unpaid":
-          console.log("Subscription unpaid");
           await onSubscriptionUnpaid(ctx, event, options);
           options.onSubscriptionUnpaid?.({
             webhookEventType: event.eventType,
@@ -153,7 +144,6 @@ const createWebhookHandler = (options: CreemOptions) => {
           break;
 
         case "subscription.update":
-          console.log("Subscription update");
           await onSubscriptionUpdate(ctx, event, options);
           options.onSubscriptionUpdate?.({
             webhookEventType: event.eventType,
@@ -164,7 +154,6 @@ const createWebhookHandler = (options: CreemOptions) => {
           break;
 
         case "subscription.past_due":
-          console.log("Subscription past due");
           await onSubscriptionPastDue(ctx, event, options);
           options.onSubscriptionPastDue?.({
             webhookEventType: event.eventType,
@@ -175,7 +164,6 @@ const createWebhookHandler = (options: CreemOptions) => {
           break;
 
         case "subscription.paused":
-          console.log("Subscription paused");
           await onSubscriptionPaused(ctx, event, options);
           options.onRevokeAccess?.({
             reason: "subscription_paused",
@@ -196,7 +184,6 @@ const createWebhookHandler = (options: CreemOptions) => {
 
       return ctx.json({ message: "Webhook received" });
     } catch (error) {
-      console.error("Creem webhook error:", error);
       return ctx.json({ error: "Failed to process webhook" }, { status: 500 });
     }
   };
@@ -211,6 +198,6 @@ export const createWebhookEndpoint = (options: CreemOptions) => {
       requireHeaders: true,
       disableBody: true,
     },
-    createWebhookHandler(options)
+    createWebhookHandler(options),
   );
 };

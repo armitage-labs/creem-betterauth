@@ -141,7 +141,7 @@ export function getDaysUntilRenewal(periodEndTimestamp: number): number {
 export function validateWebhookSignature(
   payload: string,
   signature: string | null,
-  secret: string
+  secret: string,
 ): boolean {
   if (!signature) return false;
   return generateSignature(payload, secret) === signature;
@@ -182,7 +182,7 @@ export async function createCheckout(
   config: CreemServerConfig,
   input: Omit<CreateCheckoutInput, "customer"> & {
     customer: { email?: string; id?: string };
-  }
+  },
 ): Promise<CreateCheckoutResponse> {
   const creem = createCreemClient(config);
 
@@ -239,7 +239,7 @@ export async function createCheckout(
  */
 export async function createPortal(
   config: CreemServerConfig,
-  customerId: string
+  customerId: string,
 ): Promise<CreatePortalResponse> {
   const serverURL = config.testMode
     ? "https://test-api.creem.io"
@@ -298,7 +298,7 @@ export async function createPortal(
  */
 export async function cancelSubscription(
   config: CreemServerConfig,
-  subscriptionId: string
+  subscriptionId: string,
 ): Promise<{ success: boolean; message: string }> {
   const creem = createCreemClient(config);
 
@@ -346,7 +346,7 @@ export async function cancelSubscription(
  */
 export async function retrieveSubscription(
   config: CreemServerConfig,
-  subscriptionId: string
+  subscriptionId: string,
 ): Promise<SubscriptionData> {
   const creem = createCreemClient(config);
 
@@ -395,7 +395,7 @@ export async function searchTransactions(
     orderId?: string;
     pageNumber?: number;
     pageSize?: number;
-  }
+  },
 ): Promise<SearchTransactionsResponse> {
   const creem = createCreemClient(config);
 
@@ -459,7 +459,7 @@ export async function checkSubscriptionAccess(
   config: CreemServerConfig,
   options:
     | { database: any; userId: string; customerId?: never }
-    | { customerId: string; database?: never; userId?: never }
+    | { customerId: string; database?: never; userId?: never },
 ): Promise<{
   hasAccess: boolean;
   status?: string;
@@ -479,7 +479,7 @@ export async function checkSubscriptionAccess(
         (sub: any) =>
           sub.status === "active" ||
           sub.status === "trialing" ||
-          sub.status === "paid"
+          sub.status === "paid",
       );
 
       if (activeSubscription) {
@@ -495,7 +495,6 @@ export async function checkSubscriptionAccess(
 
       return { hasAccess: false };
     } catch (error) {
-      console.error("Database subscription check error:", error);
       // Fall through to API check
     }
   }
@@ -505,10 +504,8 @@ export async function checkSubscriptionAccess(
     try {
       // Note: The Creem SDK doesn't have a direct searchSubscriptions method.
       // You'll need to retrieve subscriptions by other means or use the database mode.
-      console.warn("API mode for subscription checks requires custom implementation with Creem API.");
       return { hasAccess: false };
     } catch (error) {
-      console.error("API subscription check error:", error);
       return { hasAccess: false };
     }
   }
@@ -545,7 +542,7 @@ export async function getActiveSubscriptions(
   config: CreemServerConfig,
   options:
     | { database: any; userId: string; customerId?: never }
-    | { customerId: string; database?: never; userId?: never }
+    | { customerId: string; database?: never; userId?: never },
 ): Promise<
   Array<{
     id: string;
@@ -568,7 +565,7 @@ export async function getActiveSubscriptions(
           (sub: any) =>
             sub.status === "active" ||
             sub.status === "trialing" ||
-            sub.status === "paid"
+            sub.status === "paid",
         )
         .map((sub: any) => ({
           id: sub.creemSubscriptionId,
@@ -577,7 +574,6 @@ export async function getActiveSubscriptions(
           periodEnd: sub.periodEnd ? new Date(sub.periodEnd) : undefined,
         }));
     } catch (error) {
-      console.error("Database subscription query error:", error);
       return [];
     }
   }
@@ -587,14 +583,11 @@ export async function getActiveSubscriptions(
     try {
       // Note: The Creem SDK doesn't have a direct searchSubscriptions method.
       // You'll need to retrieve subscriptions by other means or use the database mode.
-      console.warn("API mode for listing subscriptions requires custom implementation with Creem API.");
       return [];
     } catch (error) {
-      console.error("API subscription query error:", error);
       return [];
     }
   }
 
   return [];
 }
-

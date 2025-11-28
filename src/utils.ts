@@ -1,6 +1,9 @@
 import crypto from "crypto";
 import type { GenericEndpointContext } from "better-auth";
-import { isWebhookEventEntity, NormalizedWebhookEvent } from "./webhook-types.js";
+import {
+  isWebhookEventEntity,
+  NormalizedWebhookEvent,
+} from "./webhook-types.js";
 
 export function generateSignature(payload: string, secret: string): string {
   const computedSignature = crypto
@@ -33,7 +36,7 @@ export function parseWebhookEvent(payload: string): NormalizedWebhookEvent {
  */
 export function resolveSuccessUrl(
   url: string | undefined,
-  ctx: GenericEndpointContext
+  ctx: GenericEndpointContext,
 ): string | undefined {
   if (!url) return undefined;
 
@@ -49,7 +52,6 @@ export function resolveSuccessUrl(
       headers?.get("x-forwarded-proto") || headers?.get("x-forwarded-protocol");
 
     if (!host) {
-      console.warn("Could not resolve host for relative URL:", url);
       return url; // Return as-is if we can't resolve
     }
 

@@ -32,7 +32,7 @@ export type { CancelSubscriptionInput, CancelSubscriptionResponse };
 
 const createCancelSubscriptionHandler = (
   creem: Creem,
-  options: CreemOptions
+  options: CreemOptions,
 ) => {
   return async (ctx: GenericEndpointContext) => {
     const body = ctx.body as CancelSubscriptionParams;
@@ -66,7 +66,7 @@ const createCancelSubscriptionHandler = (
               sub.status === "active" ||
               sub.status === "trialing" ||
               sub.status === "unpaid" ||
-              sub.status === "past_due"
+              sub.status === "past_due",
           );
 
           if (activeSubscription && activeSubscription.creemSubscriptionId) {
@@ -76,14 +76,14 @@ const createCancelSubscriptionHandler = (
             // If no active subscription and no ID provided, return error
             return ctx.json(
               { error: "No active subscription found for this user" },
-              { status: 404 }
+              { status: 404 },
             );
           }
         } else if (!subscriptionId) {
           // No subscriptions in database and no ID provided
           return ctx.json(
             { error: "No subscription found for this user" },
-            { status: 404 }
+            { status: 404 },
           );
         }
       } else if (!subscriptionId) {
@@ -93,7 +93,7 @@ const createCancelSubscriptionHandler = (
             error:
               "Subscription ID is required when database persistence is disabled",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -107,10 +107,9 @@ const createCancelSubscriptionHandler = (
         message: "Subscription cancelled successfully",
       });
     } catch (error) {
-      console.error("Creem cancel subscription error:", error);
       return ctx.json(
         { error: "Failed to cancel subscription" },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };
@@ -160,7 +159,7 @@ const createCancelSubscriptionHandler = (
  */
 export const createCancelSubscriptionEndpoint = (
   creem: Creem,
-  options: CreemOptions
+  options: CreemOptions,
 ) => {
   return createAuthEndpoint(
     "/creem/cancel-subscription",
@@ -168,6 +167,6 @@ export const createCancelSubscriptionEndpoint = (
       method: "POST",
       body: CancelSubscriptionParams,
     },
-    createCancelSubscriptionHandler(creem, options)
+    createCancelSubscriptionHandler(creem, options),
   );
 };

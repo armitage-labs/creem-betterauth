@@ -43,15 +43,19 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
           requestId: body.requestId,
           units: body.units,
           discountCode: body.discountCode,
-          customer: body.customer?.email ? {
-            email: body.customer.email,
-          } : session?.user?.email ? {
-            email: session.user.email,
-          } : undefined,
+          customer: body.customer?.email
+            ? {
+                email: body.customer.email,
+              }
+            : session?.user?.email
+              ? {
+                  email: session.user.email,
+                }
+              : undefined,
           //   customField: body.customField, TODO: Implement proper customField handling
           successUrl: resolveSuccessUrl(
             body.successUrl || options.defaultSuccessUrl,
-            ctx
+            ctx,
           ),
           metadata: {
             ...(body.metadata || {}),
@@ -67,7 +71,6 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
         redirect: true,
       });
     } catch (error) {
-      console.error("Creem checkout error:", error);
       return ctx.json({ error: "Failed to create checkout" }, { status: 500 });
     }
   };
@@ -106,6 +109,6 @@ export const createCheckoutEndpoint = (creem: Creem, options: CreemOptions) => {
       method: "POST",
       body: CheckoutParams,
     },
-    createCheckoutHandler(creem, options)
+    createCheckoutHandler(creem, options),
   );
 };

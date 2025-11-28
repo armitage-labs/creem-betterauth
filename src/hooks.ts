@@ -36,14 +36,14 @@ interface Subscription {
 export async function onCheckoutCompleted(
   ctx: GenericEndpointContext,
   event: NormalizedCheckoutCompletedEvent,
-  options: CreemOptions
+  options: CreemOptions,
 ) {
   // Skip database operations if persistSubscriptions is disabled
   const shouldPersist = options.persistSubscriptions !== false;
 
   if (!shouldPersist) {
     logger.info(
-      "Database persistence disabled, skipping checkout.completed database operations"
+      "Database persistence disabled, skipping checkout.completed database operations",
     );
     return;
   }
@@ -56,7 +56,7 @@ export async function onCheckoutCompleted(
 
     if (!customerId) {
       logger.warn(
-        "Creem webhook: No customer ID found in checkout.completed event"
+        "Creem webhook: No customer ID found in checkout.completed event",
       );
       return;
     }
@@ -66,14 +66,13 @@ export async function onCheckoutCompleted(
 
     if (!referenceId) {
       logger.warn(
-        "Creem webhook: No referenceId found in checkout.completed event"
+        "Creem webhook: No referenceId found in checkout.completed event",
       );
       return;
     }
 
     // Update user with creemCustomerId (if user exists)
     try {
-      console.log("onCheckoutCompleted: Fetching user");
       const user = await ctx.context.adapter.findOne<{
         id: string;
         creemCustomerId?: string;
@@ -82,10 +81,7 @@ export async function onCheckoutCompleted(
         where: [{ field: "id", value: referenceId }],
       });
 
-      console.log("onCheckoutCompleted: User found", user);
-
       if (user && !user.creemCustomerId) {
-        console.log("onCheckoutCompleted: Updating user");
         await ctx.context.adapter.update({
           model: "user",
           where: [{ field: "id", value: referenceId }],
@@ -94,7 +90,7 @@ export async function onCheckoutCompleted(
           },
         });
         logger.info(
-          `Updated user ${referenceId} with creemCustomerId: ${customerId}`
+          `Updated user ${referenceId} with creemCustomerId: ${customerId}`,
         );
       }
     } catch (error) {
@@ -141,7 +137,7 @@ export async function onCheckoutCompleted(
             update: subscriptionUpdate,
           });
           logger.info(
-            `Updated subscription ${existingSubscription.id} with Creem data`
+            `Updated subscription ${existingSubscription.id} with Creem data`,
           );
         } else {
           // Create new subscription
@@ -151,7 +147,7 @@ export async function onCheckoutCompleted(
               data: subscriptionUpdate,
             });
           logger.info(
-            `Created new subscription ${newSubscription.id} from checkout`
+            `Created new subscription ${newSubscription.id} from checkout`,
           );
         }
       }
@@ -169,7 +165,7 @@ export async function onCheckoutCompleted(
 export async function onSubscriptionActive(
   ctx: GenericEndpointContext,
   event: NormalizedSubscriptionActiveEvent,
-  options: CreemOptions
+  options: CreemOptions,
 ) {
   await updateSubscriptionFromEvent(ctx, event.object, "active", options);
 }
@@ -181,7 +177,7 @@ export async function onSubscriptionActive(
 export async function onSubscriptionTrialing(
   ctx: GenericEndpointContext,
   event: NormalizedSubscriptionTrialingEvent,
-  options: CreemOptions
+  options: CreemOptions,
 ) {
   await updateSubscriptionFromEvent(ctx, event.object, "trialing", options);
 }
@@ -193,7 +189,7 @@ export async function onSubscriptionTrialing(
 export async function onSubscriptionCanceled(
   ctx: GenericEndpointContext,
   event: NormalizedSubscriptionCanceledEvent,
-  options: CreemOptions
+  options: CreemOptions,
 ) {
   await updateSubscriptionFromEvent(ctx, event.object, "canceled", options);
 }
@@ -205,13 +201,13 @@ export async function onSubscriptionCanceled(
 export async function onSubscriptionPaid(
   ctx: GenericEndpointContext,
   event: NormalizedSubscriptionPaidEvent,
-  options: CreemOptions
+  options: CreemOptions,
 ) {
   await updateSubscriptionFromEvent(
     ctx,
     event.object,
     event.object.status,
-    options
+    options,
   );
 }
 
@@ -222,7 +218,7 @@ export async function onSubscriptionPaid(
 export async function onSubscriptionExpired(
   ctx: GenericEndpointContext,
   event: NormalizedSubscriptionExpiredEvent,
-  options: CreemOptions
+  options: CreemOptions,
 ) {
   await updateSubscriptionFromEvent(ctx, event.object, "unpaid", options); // TODO: Check expired status
 }
@@ -234,7 +230,7 @@ export async function onSubscriptionExpired(
 export async function onSubscriptionUnpaid(
   ctx: GenericEndpointContext,
   event: NormalizedSubscriptionUnpaidEvent,
-  options: CreemOptions
+  options: CreemOptions,
 ) {
   await updateSubscriptionFromEvent(ctx, event.object, "unpaid", options);
 }
@@ -246,13 +242,13 @@ export async function onSubscriptionUnpaid(
 export async function onSubscriptionUpdate(
   ctx: GenericEndpointContext,
   event: NormalizedSubscriptionUpdateEvent,
-  options: CreemOptions
+  options: CreemOptions,
 ) {
   await updateSubscriptionFromEvent(
     ctx,
     event.object,
     event.object.status,
-    options
+    options,
   );
 }
 
@@ -263,7 +259,7 @@ export async function onSubscriptionUpdate(
 export async function onSubscriptionPastDue(
   ctx: GenericEndpointContext,
   event: NormalizedSubscriptionPastDueEvent,
-  options: CreemOptions
+  options: CreemOptions,
 ) {
   await updateSubscriptionFromEvent(ctx, event.object, "unpaid", options); // TODO: Check past_due status
 }
@@ -275,7 +271,7 @@ export async function onSubscriptionPastDue(
 export async function onSubscriptionPaused(
   ctx: GenericEndpointContext,
   event: NormalizedSubscriptionPausedEvent,
-  options: CreemOptions
+  options: CreemOptions,
 ) {
   await updateSubscriptionFromEvent(ctx, event.object, "paused", options);
 }
@@ -287,14 +283,14 @@ async function updateSubscriptionFromEvent(
   ctx: GenericEndpointContext,
   subscriptionData: NormalizedSubscriptionEntity,
   status: SubscriptionStatus,
-  options: CreemOptions
+  options: CreemOptions,
 ) {
   // Skip database operations if persistSubscriptions is disabled
   const shouldPersist = options.persistSubscriptions !== false;
 
   if (!shouldPersist) {
     logger.info(
-      "Database persistence disabled, skipping subscription database operations"
+      "Database persistence disabled, skipping subscription database operations",
     );
     return;
   }
@@ -303,7 +299,7 @@ async function updateSubscriptionFromEvent(
 
   if (!referenceId) {
     logger.warn(
-      "Creem webhook: No referenceId found in subscription event. The user is likely not logged in."
+      "Creem webhook: No referenceId found in subscription event. The user is likely not logged in.",
     );
     return;
   }
@@ -329,13 +325,13 @@ async function updateSubscriptionFromEvent(
       // Find the subscription for this specific product
       subscription =
         subscriptions.find(
-          (sub: Subscription) => sub.productId === productId
+          (sub: Subscription) => sub.productId === productId,
         ) || subscriptions[0];
     }
 
     if (!subscription) {
       logger.warn(
-        `Creem webhook: Subscription not found for creemSubscriptionId: ${subscriptionData.id}`
+        `Creem webhook: Subscription not found for creemSubscriptionId: ${subscriptionData.id}`,
       );
       return;
     }
