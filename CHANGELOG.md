@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Improved developer experience: Plugin now logs a warning instead of throwing a fatal error when Creem API key is missing during initialization
+- API endpoints (`createCheckout`, `createPortal`, `cancelSubscription`, `retrieveSubscription`, `searchTransactions`) now return clear error messages when called without an API key configured
+- Projects can now run without a Creem API key until Creem functionality is actually used, improving developer velocity
+
 ### Added
+
 - Initial release of `@creem_io/better-auth`
 - Better Auth plugin for Creem payment integration
 - Client-side methods for checkout, portal, subscriptions, and transactions
@@ -23,5 +30,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.1] - 2024-11-05
 
 ### Added
-- Initial release
 
+- Initial release

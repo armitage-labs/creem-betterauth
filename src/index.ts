@@ -31,7 +31,10 @@ export type {
 } from "./checkout-types.js";
 
 // Export portal types
-export type { CreatePortalInput, CreatePortalResponse } from "./portal-types.js";
+export type {
+  CreatePortalInput,
+  CreatePortalResponse,
+} from "./portal-types.js";
 
 // Export subscription types
 export type {
@@ -116,7 +119,9 @@ export const creem = (options: CreemOptions) => {
   });
 
   if (!options.apiKey) {
-    throw new Error("Creem API key is not set");
+    console.warn(
+      "⚠️  Creem API key is not set. The plugin will initialize, but Creem API functionality will not work until an API key is provided."
+    );
   }
 
   return {

@@ -141,7 +141,7 @@ export function getDaysUntilRenewal(periodEndTimestamp: number): number {
 export function validateWebhookSignature(
   payload: string,
   signature: string | null,
-  secret: string,
+  secret: string
 ): boolean {
   if (!signature) return false;
   return generateSignature(payload, secret) === signature;
@@ -182,8 +182,14 @@ export async function createCheckout(
   config: CreemServerConfig,
   input: Omit<CreateCheckoutInput, "customer"> & {
     customer: { email?: string; id?: string };
-  },
+  }
 ): Promise<CreateCheckoutResponse> {
+  if (!config.apiKey) {
+    throw new Error(
+      "Creem API key is not configured. Please provide an apiKey in the CreemServerConfig."
+    );
+  }
+
   const creem = createCreemClient(config);
 
   const checkout = await creem.createCheckout({
@@ -239,8 +245,14 @@ export async function createCheckout(
  */
 export async function createPortal(
   config: CreemServerConfig,
-  customerId: string,
+  customerId: string
 ): Promise<CreatePortalResponse> {
+  if (!config.apiKey) {
+    throw new Error(
+      "Creem API key is not configured. Please provide an apiKey in the CreemServerConfig."
+    );
+  }
+
   const serverURL = config.testMode
     ? "https://test-api.creem.io"
     : "https://api.creem.io";
@@ -298,8 +310,14 @@ export async function createPortal(
  */
 export async function cancelSubscription(
   config: CreemServerConfig,
-  subscriptionId: string,
+  subscriptionId: string
 ): Promise<{ success: boolean; message: string }> {
+  if (!config.apiKey) {
+    throw new Error(
+      "Creem API key is not configured. Please provide an apiKey in the CreemServerConfig."
+    );
+  }
+
   const creem = createCreemClient(config);
 
   await creem.cancelSubscription({
@@ -346,8 +364,14 @@ export async function cancelSubscription(
  */
 export async function retrieveSubscription(
   config: CreemServerConfig,
-  subscriptionId: string,
+  subscriptionId: string
 ): Promise<SubscriptionData> {
+  if (!config.apiKey) {
+    throw new Error(
+      "Creem API key is not configured. Please provide an apiKey in the CreemServerConfig."
+    );
+  }
+
   const creem = createCreemClient(config);
 
   const subscription = await creem.retrieveSubscription({
@@ -395,8 +419,14 @@ export async function searchTransactions(
     orderId?: string;
     pageNumber?: number;
     pageSize?: number;
-  },
+  }
 ): Promise<SearchTransactionsResponse> {
+  if (!config.apiKey) {
+    throw new Error(
+      "Creem API key is not configured. Please provide an apiKey in the CreemServerConfig."
+    );
+  }
+
   const creem = createCreemClient(config);
 
   const response = await creem.searchTransactions({
@@ -459,7 +489,7 @@ export async function checkSubscriptionAccess(
   config: CreemServerConfig,
   options:
     | { database: any; userId: string; customerId?: never }
-    | { customerId: string; database?: never; userId?: never },
+    | { customerId: string; database?: never; userId?: never }
 ): Promise<{
   hasAccess: boolean;
   status?: string;
@@ -479,7 +509,7 @@ export async function checkSubscriptionAccess(
         (sub: any) =>
           sub.status === "active" ||
           sub.status === "trialing" ||
-          sub.status === "paid",
+          sub.status === "paid"
       );
 
       if (activeSubscription) {
@@ -542,7 +572,7 @@ export async function getActiveSubscriptions(
   config: CreemServerConfig,
   options:
     | { database: any; userId: string; customerId?: never }
-    | { customerId: string; database?: never; userId?: never },
+    | { customerId: string; database?: never; userId?: never }
 ): Promise<
   Array<{
     id: string;
@@ -565,7 +595,7 @@ export async function getActiveSubscriptions(
           (sub: any) =>
             sub.status === "active" ||
             sub.status === "trialing" ||
-            sub.status === "paid",
+            sub.status === "paid"
         )
         .map((sub: any) => ({
           id: sub.creemSubscriptionId,

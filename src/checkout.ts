@@ -33,6 +33,13 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
   return async (ctx: GenericEndpointContext) => {
     const body = ctx.body as CheckoutParams;
 
+    if (!options.apiKey) {
+      return ctx.json(
+        { error: "Creem API key is not configured. Please set the apiKey option when initializing the Creem plugin." },
+        { status: 500 },
+      );
+    }
+
     try {
       const session = await getSessionFromCtx(ctx);
 
