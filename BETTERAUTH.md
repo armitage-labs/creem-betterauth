@@ -191,9 +191,10 @@ When `persistSubscriptions: true`, the plugin creates the following schema:
 
 ### User Table Extension
 
-| Field             | Type   | Description                  |
-| ----------------- | ------ | ---------------------------- |
-| `creemCustomerId` | string | Links user to Creem customer |
+| Field             | Type    | Description                                              |
+| ----------------- | ------- | -------------------------------------------------------- |
+| `creemCustomerId` | string  | Links user to Creem customer                             |
+| `hadTrial`        | boolean | Trial abuse prevention flag (default: false) *since 1.1* |
 
 ## Usage
 
@@ -753,13 +754,49 @@ import type { CreemServerConfig } from "@creem_io/better-auth/server";
 
 When using database mode (`persistSubscriptions: true`), the plugin automatically prevents trial abuse. Users can only receive one trial across all subscription plans.
 
+**How it works:**
+
+1. When a user starts a trial subscription, the plugin sets `hadTrial: true` on their user record
+2. On subsequent checkouts, the plugin checks if `hadTrial` is true
+3. If true, a `skipTrial` flag is passed to Creem in the checkout metadata
+4. Creem uses this flag to skip the trial period for returning users
+
 **Example Scenario:**
 1. User subscribes to "Starter" plan with 7-day trial
-2. User cancels subscription during the trial period
-3. User attempts to subscribe to "Premium" plan
-4. No trial is offered - user is charged immediately
+2. User's record is updated: `hadTrial: true`
+3. User cancels subscription during the trial period
+4. User attempts to subscribe to "Premium" plan
+5. Plugin detects `hadTrial: true` and passes `skipTrial: true` to Creem
+6. No trial is offered - user is charged immediately
 
-This protection is automatic and requires no configuration. Trial eligibility is determined when the subscription is created and cannot be overridden.
+This protection is automatic when using the Better Auth endpoints. For server-side checkout functions, you can manually pass the `skipTrial` parameter:
+
+```typescript
+import { createCheckout } from "@creem_io/better-auth/server";
+
+// Query your database for user.hadTrial
+const { url } = await createCheckout(
+  config,
+  {
+    productId,
+    customer: { email: user.email },
+    successUrl: "/success",
+    skipTrial: user.hadTrial, // Pass true if user has already used a trial
+  }
+);
+```
+
+### Database Schema Addition
+
+This feature adds a `hadTrial` field to the user table:
+
+| Field      | Type    | Description                                      |
+| ---------- | ------- | ------------------------------------------------ |
+| `hadTrial` | boolean | Whether user has ever used a trial (default: false) |
+
+<Callout type="info">
+  **Migration Note:** When upgrading from a previous version, run `npx @better-auth/cli migrate` to add the new `hadTrial` column. Existing users will default to `hadTrial: false`, meaning they may get one more trial after the upgrade. Going forward, all trials will be properly tracked.
+</Callout>
 
 ## Environment Variables
 

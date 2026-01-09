@@ -633,9 +633,10 @@ When `persistSubscriptions: true`, the plugin creates these database tables:
 
 ### `user` Table Extension
 
-| Field             | Type   | Description                  |
-| ----------------- | ------ | ---------------------------- |
-| `creemCustomerId` | string | Links user to Creem customer |
+| Field             | Type    | Description                                              |
+| ----------------- | ------- | -------------------------------------------------------- |
+| `creemCustomerId` | string  | Links user to Creem customer                             |
+| `hadTrial`        | boolean | Trial abuse prevention flag (default: false) *since 1.1* |
 
 
 ### API Mode

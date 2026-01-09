@@ -53,6 +53,23 @@ export const user = {
         type: "string",
         required: false,
       },
+      /**
+       * Tracks whether this user has ever used a trial period.
+       * Used for automatic trial abuse prevention - users can only
+       * receive one trial across all subscription plans.
+       *
+       * This field is:
+       * - Optional (required: false) for backward compatibility with existing users
+       * - Defaults to false for new users
+       * - Set to true when user enters a trialing subscription state
+       *
+       * @since 1.1.0
+       */
+      hadTrial: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+      },
     },
   },
 } satisfies BetterAuthPluginDBSchema;
