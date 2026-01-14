@@ -172,7 +172,8 @@ export async function onSubscriptionActive(
 
 /**
  * Handle subscription.trialing event
- * Updates subscription status to trialing
+ * Updates subscription status to trialing and marks user as having used a trial
+ * for trial abuse prevention.
  */
 export async function onSubscriptionTrialing(
   ctx: GenericEndpointContext,
@@ -180,6 +181,72 @@ export async function onSubscriptionTrialing(
   options: CreemOptions,
 ) {
   await updateSubscriptionFromEvent(ctx, event.object, "trialing", options);
+
+  // Mark user as having used a trial (for trial abuse prevention)
+  await markUserAsHadTrial(ctx, event.object, options);
+}
+
+/**
+ * Mark a user as having used a trial period.
+ * This is used for automatic trial abuse prevention - once a user has had
+ * a trial, they cannot receive another trial on any subscription plan.
+ *
+ * This function is idempotent - calling it multiple times for the same user
+ * will not cause issues.
+ */
+async function markUserAsHadTrial(
+  ctx: GenericEndpointContext,
+  subscriptionData: NormalizedSubscriptionEntity,
+  options: CreemOptions,
+) {
+  // Skip if persistence is disabled
+  const shouldPersist = options.persistSubscriptions !== false;
+  if (!shouldPersist) {
+    return;
+  }
+
+  const referenceId = subscriptionData.metadata?.referenceId as string;
+  if (!referenceId) {
+    logger.warn(
+      "Creem webhook: Cannot mark user as hadTrial - no referenceId in subscription metadata",
+    );
+    return;
+  }
+
+  try {
+    // Find the user
+    const user = await ctx.context.adapter.findOne<{
+      id: string;
+      hadTrial?: boolean;
+    }>({
+      model: "user",
+      where: [{ field: "id", value: referenceId }],
+    });
+
+    if (!user) {
+      logger.warn(
+        `Creem webhook: User not found for referenceId: ${referenceId}, cannot mark as hadTrial`,
+      );
+      return;
+    }
+
+    // Only update if not already marked (idempotent)
+    if (!user.hadTrial) {
+      await ctx.context.adapter.update({
+        model: "user",
+        where: [{ field: "id", value: referenceId }],
+        update: {
+          hadTrial: true,
+        },
+      });
+      logger.info(
+        `Marked user ${referenceId} as hadTrial=true (trial abuse prevention)`,
+      );
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error(`Failed to mark user as hadTrial: ${message}`);
+  }
 }
 
 /**

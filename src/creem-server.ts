@@ -177,11 +177,33 @@ export function validateWebhookSignature(
  *   redirect(url);
  * }
  * ```
+ *
+ * @example
+ * // With trial abuse prevention (check user.hadTrial from your database)
+ * ```typescript
+ * const { url } = await createCheckout(
+ *   config,
+ *   {
+ *     productId,
+ *     customer: { email: user.email },
+ *     successUrl: "/success",
+ *     skipTrial: user.hadTrial, // Pass true if user has already used a trial
+ *   }
+ * );
+ * ```
  */
 export async function createCheckout(
   config: CreemServerConfig,
   input: Omit<CreateCheckoutInput, "customer"> & {
     customer: { email?: string; id?: string };
+    /**
+     * If true, tells Creem to skip the trial period for this checkout.
+     * Use this for trial abuse prevention - pass true if the user has
+     * already used a trial (check user.hadTrial from your database).
+     *
+     * @since 1.1.0
+     */
+    skipTrial?: boolean;
   }
 ): Promise<CreateCheckoutResponse> {
   if (!config.apiKey) {
@@ -201,7 +223,11 @@ export async function createCheckout(
       discountCode: input.discountCode,
       customer: input.customer,
       successUrl: input.successUrl,
-      metadata: input.metadata,
+      metadata: {
+        ...(input.metadata || {}),
+        // Trial abuse prevention: signal to Creem that this user has already had a trial
+        ...(input.skipTrial && { skipTrial: true }),
+      },
     },
   });
 
