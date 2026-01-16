@@ -26,10 +26,15 @@ const createWebhookHandler = (options: CreemOptions) => {
 
       const signature = ctx.request.headers.get("creem-signature");
 
-      if (
-        !options.webhookSecret ||
-        generateSignature(buf, options.webhookSecret) !== signature
-      ) {
+      if (!options.webhookSecret) {
+        return ctx.json({ error: "Invalid signature" }, { status: 400 });
+      }
+
+      const computedSignature = await generateSignature(
+        buf,
+        options.webhookSecret,
+      );
+      if (computedSignature !== signature) {
         return ctx.json({ error: "Invalid signature" }, { status: 400 });
       }
 

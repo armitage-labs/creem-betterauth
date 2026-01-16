@@ -129,7 +129,7 @@ export function getDaysUntilRenewal(periodEndTimestamp: number): number {
  *   const payload = await req.text();
  *   const signature = req.headers.get('creem-signature');
  *
- *   if (!validateWebhookSignature(payload, signature, process.env.CREEM_WEBHOOK_SECRET!)) {
+ *   if (!await validateWebhookSignature(payload, signature, process.env.CREEM_WEBHOOK_SECRET!)) {
  *     return new Response('Invalid signature', { status: 401 });
  *   }
  *
@@ -138,13 +138,14 @@ export function getDaysUntilRenewal(periodEndTimestamp: number): number {
  * }
  * ```
  */
-export function validateWebhookSignature(
+export async function validateWebhookSignature(
   payload: string,
   signature: string | null,
-  secret: string
-): boolean {
+  secret: string,
+): Promise<boolean> {
   if (!signature) return false;
-  return generateSignature(payload, secret) === signature;
+  const computedSignature = await generateSignature(payload, secret);
+  return computedSignature === signature;
 }
 
 /**

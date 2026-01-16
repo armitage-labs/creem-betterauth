@@ -1,16 +1,35 @@
-import crypto from "crypto";
 import type { GenericEndpointContext } from "better-auth";
 import {
   isWebhookEventEntity,
   NormalizedWebhookEvent,
 } from "./webhook-types.js";
 
-export function generateSignature(payload: string, secret: string): string {
-  const computedSignature = crypto
-    .createHmac("sha256", secret)
-    .update(payload)
-    .digest("hex");
-  return computedSignature;
+/**
+ * Generates an HMAC-SHA256 signature for webhook verification.
+ * Uses the Web Crypto API for cross-platform compatibility (Node.js, browsers, V8 isolates).
+ */
+export async function generateSignature(
+  payload: string,
+  secret: string,
+): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+  const data = encoder.encode(payload);
+
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+
+  const signature = await crypto.subtle.sign("HMAC", cryptoKey, data);
+
+  // Convert ArrayBuffer to hex string
+  return Array.from(new Uint8Array(signature))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 /**
