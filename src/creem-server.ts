@@ -17,6 +17,8 @@ export interface CreemServerConfig {
   apiKey: string;
   /** Whether to use test mode */
   testMode?: boolean;
+  /** Whether to use sandbox mode (takes precedence over testMode) */
+  sandboxMode?: boolean;
 }
 
 /**
@@ -32,7 +34,7 @@ export interface CreemServerConfig {
  *
  * const creem = createCreemClient({
  *   apiKey: process.env.CREEM_API_KEY!,
- *   testMode: true
+ *   testMode: true // or sandboxMode: true for sandbox environment
  * });
  *
  * // Use directly in Server Actions or API routes
@@ -43,9 +45,14 @@ export interface CreemServerConfig {
  * ```
  */
 export function createCreemClient(config: CreemServerConfig): Creem {
-  const serverURL = config.testMode
-    ? "https://test-api.creem.io"
-    : "https://api.creem.io";
+  let serverURL: string;
+  if (config.sandboxMode) {
+    serverURL = "https://sandbox-api.creem.io";
+  } else if (config.testMode) {
+    serverURL = "https://test-api.creem.io";
+  } else {
+    serverURL = "https://api.creem.io";
+  }
 
   return new Creem({ serverURL });
 }
@@ -280,9 +287,14 @@ export async function createPortal(
     );
   }
 
-  const serverURL = config.testMode
-    ? "https://test-api.creem.io"
-    : "https://api.creem.io";
+  let serverURL: string;
+  if (config.sandboxMode) {
+    serverURL = "https://sandbox-api.creem.io";
+  } else if (config.testMode) {
+    serverURL = "https://test-api.creem.io";
+  } else {
+    serverURL = "https://api.creem.io";
+  }
 
   const response = await fetch(`${serverURL}/v1/customers/billing`, {
     method: "POST",

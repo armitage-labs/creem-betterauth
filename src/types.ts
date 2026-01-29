@@ -108,6 +108,11 @@ export interface CreemOptions {
    */
   testMode?: boolean;
   /**
+   * Sandbox mode - Use sandbox environment for testing
+   * Takes precedence over testMode if both are set
+   */
+  sandboxMode?: boolean;
+  /**
    * Base URL
    */
   baseUrl?: string;

@@ -110,9 +110,14 @@ export {
  * ```
  */
 export const creem = (options: CreemOptions) => {
-  const serverURL = options.testMode
-    ? "https://test-api.creem.io"
-    : "https://api.creem.io";
+  let serverURL: string;
+  if (options.sandboxMode) {
+    serverURL = "https://sandbox-api.creem.io";
+  } else if (options.testMode) {
+    serverURL = "https://test-api.creem.io";
+  } else {
+    serverURL = "https://api.creem.io";
+  }
 
   const creem = new Creem({
     serverURL,
