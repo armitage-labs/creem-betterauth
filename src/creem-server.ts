@@ -1,8 +1,7 @@
 import { Creem } from "creem";
-import type { CreemOptions } from "./types.js";
 import type {
-  CreateCheckoutInput,
-  CreateCheckoutResponse,
+	CreateCheckoutInput,
+	CreateCheckoutResponse,
 } from "./checkout-types.js";
 import type { CreatePortalResponse } from "./portal-types.js";
 import type { SubscriptionData } from "./retrieve-subscription-types.js";
@@ -13,10 +12,10 @@ import { generateSignature } from "./utils.js";
  * Configuration for server-side Creem operations.
  */
 export interface CreemServerConfig {
-  /** Creem API key */
-  apiKey: string;
-  /** Whether to use test mode */
-  testMode?: boolean;
+	/** Creem API key */
+	apiKey: string;
+	/** Whether to use test mode */
+	testMode?: boolean;
 }
 
 /**
@@ -43,11 +42,14 @@ export interface CreemServerConfig {
  * ```
  */
 export function createCreemClient(config: CreemServerConfig): Creem {
-  const serverURL = config.testMode
-    ? "https://test-api.creem.io"
-    : "https://api.creem.io";
+	const serverURL = config.testMode
+		? "https://test-api.creem.io"
+		: "https://api.creem.io";
 
-  return new Creem({ serverURL });
+	return new Creem({
+		apiKey: config.apiKey,
+		serverURL,
+	});
 }
 
 /**
@@ -66,7 +68,7 @@ export function createCreemClient(config: CreemServerConfig): Creem {
  * ```
  */
 export function isActiveSubscription(status: string): boolean {
-  return ["active", "trialing", "paid"].includes(status.toLowerCase());
+	return ["active", "trialing", "paid"].includes(status.toLowerCase());
 }
 
 /**
@@ -84,7 +86,7 @@ export function isActiveSubscription(status: string): boolean {
  * ```
  */
 export function formatCreemDate(timestamp: number): Date {
-  return new Date(timestamp * 1000);
+	return new Date(timestamp * 1000);
 }
 
 /**
@@ -106,10 +108,10 @@ export function formatCreemDate(timestamp: number): Date {
  * ```
  */
 export function getDaysUntilRenewal(periodEndTimestamp: number): number {
-  const renewalDate = formatCreemDate(periodEndTimestamp);
-  const now = new Date();
-  const diffTime = renewalDate.getTime() - now.getTime();
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+	const renewalDate = formatCreemDate(periodEndTimestamp);
+	const now = new Date();
+	const diffTime = renewalDate.getTime() - now.getTime();
+	return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
 /**
@@ -139,13 +141,13 @@ export function getDaysUntilRenewal(periodEndTimestamp: number): number {
  * ```
  */
 export async function validateWebhookSignature(
-  payload: string,
-  signature: string | null,
-  secret: string,
+	payload: string,
+	signature: string | null,
+	secret: string,
 ): Promise<boolean> {
-  if (!signature) return false;
-  const computedSignature = await generateSignature(payload, secret);
-  return computedSignature === signature;
+	if (!signature) return false;
+	const computedSignature = await generateSignature(payload, secret);
+	return computedSignature === signature;
 }
 
 /**
@@ -194,48 +196,45 @@ export async function validateWebhookSignature(
  * ```
  */
 export async function createCheckout(
-  config: CreemServerConfig,
-  input: Omit<CreateCheckoutInput, "customer"> & {
-    customer: { email?: string; id?: string };
-    /**
-     * If true, tells Creem to skip the trial period for this checkout.
-     * Use this for trial abuse prevention - pass true if the user has
-     * already used a trial (check user.hadTrial from your database).
-     *
-     * @since 1.1.0
-     */
-    skipTrial?: boolean;
-  }
+	config: CreemServerConfig,
+	input: Omit<CreateCheckoutInput, "customer"> & {
+		customer: { email?: string; id?: string };
+		/**
+		 * If true, tells Creem to skip the trial period for this checkout.
+		 * Use this for trial abuse prevention - pass true if the user has
+		 * already used a trial (check user.hadTrial from your database).
+		 *
+		 * @since 1.1.0
+		 */
+		skipTrial?: boolean;
+	},
 ): Promise<CreateCheckoutResponse> {
-  if (!config.apiKey) {
-    throw new Error(
-      "Creem API key is not configured. Please provide an apiKey in the CreemServerConfig."
-    );
-  }
+	if (!config.apiKey) {
+		throw new Error(
+			"Creem API key is not configured. Please provide an apiKey in the CreemServerConfig.",
+		);
+	}
 
-  const creem = createCreemClient(config);
+	const creem = createCreemClient(config);
 
-  const checkout = await creem.createCheckout({
-    xApiKey: config.apiKey,
-    createCheckoutRequest: {
-      productId: input.productId,
-      requestId: input.requestId,
-      units: input.units,
-      discountCode: input.discountCode,
-      customer: input.customer,
-      successUrl: input.successUrl,
-      metadata: {
-        ...(input.metadata || {}),
-        // Trial abuse prevention: signal to Creem that this user has already had a trial
-        ...(input.skipTrial && { skipTrial: true }),
-      },
-    },
-  });
+	const checkout = await creem.checkouts.create({
+		productId: input.productId,
+		requestId: input.requestId,
+		units: input.units,
+		discountCode: input.discountCode,
+		customer: input.customer,
+		successUrl: input.successUrl,
+		metadata: {
+			...(input.metadata || {}),
+			// Trial abuse prevention: signal to Creem that this user has already had a trial
+			...(input.skipTrial && { skipTrial: true }),
+		},
+	});
 
-  return {
-    url: checkout.checkoutUrl || "",
-    redirect: true,
-  };
+	return {
+		url: checkout.checkoutUrl || "",
+		redirect: true,
+	};
 }
 
 /**
@@ -271,40 +270,40 @@ export async function createCheckout(
  * ```
  */
 export async function createPortal(
-  config: CreemServerConfig,
-  customerId: string
+	config: CreemServerConfig,
+	customerId: string,
 ): Promise<CreatePortalResponse> {
-  if (!config.apiKey) {
-    throw new Error(
-      "Creem API key is not configured. Please provide an apiKey in the CreemServerConfig."
-    );
-  }
+	if (!config.apiKey) {
+		throw new Error(
+			"Creem API key is not configured. Please provide an apiKey in the CreemServerConfig.",
+		);
+	}
 
-  const serverURL = config.testMode
-    ? "https://test-api.creem.io"
-    : "https://api.creem.io";
+	const serverURL = config.testMode
+		? "https://test-api.creem.io"
+		: "https://api.creem.io";
 
-  const response = await fetch(`${serverURL}/v1/customers/billing`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": config.apiKey,
-    },
-    body: JSON.stringify({
-      customer_id: customerId,
-    }),
-  });
+	const response = await fetch(`${serverURL}/v1/customers/billing`, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+			"x-api-key": config.apiKey,
+		},
+		body: JSON.stringify({
+			customer_id: customerId,
+		}),
+	});
 
-  if (!response.ok) {
-    throw new Error(`Creem API error: ${response.statusText}`);
-  }
+	if (!response.ok) {
+		throw new Error(`Creem API error: ${response.statusText}`);
+	}
 
-  const portal = (await response.json()) as { customer_portal_link: string };
+	const portal = (await response.json()) as { customer_portal_link: string };
 
-  return {
-    url: portal.customer_portal_link,
-    redirect: true,
-  };
+	return {
+		url: portal.customer_portal_link,
+		redirect: true,
+	};
 }
 
 /**
@@ -336,26 +335,25 @@ export async function createPortal(
  * ```
  */
 export async function cancelSubscription(
-  config: CreemServerConfig,
-  subscriptionId: string
+	config: CreemServerConfig,
+	subscriptionId: string,
 ): Promise<{ success: boolean; message: string }> {
-  if (!config.apiKey) {
-    throw new Error(
-      "Creem API key is not configured. Please provide an apiKey in the CreemServerConfig."
-    );
-  }
+	if (!config.apiKey) {
+		throw new Error(
+			"Creem API key is not configured. Please provide an apiKey in the CreemServerConfig.",
+		);
+	}
 
-  const creem = createCreemClient(config);
+	const creem = createCreemClient(config);
 
-  await creem.cancelSubscription({
-    xApiKey: config.apiKey,
-    id: subscriptionId,
-  });
+	await creem.subscriptions.cancel(subscriptionId, {
+		mode: "immediate",
+	});
 
-  return {
-    success: true,
-    message: "Subscription cancelled successfully",
-  };
+	return {
+		success: true,
+		message: "Subscription cancelled successfully",
+	};
 }
 
 /**
@@ -390,23 +388,20 @@ export async function cancelSubscription(
  * ```
  */
 export async function retrieveSubscription(
-  config: CreemServerConfig,
-  subscriptionId: string
+	config: CreemServerConfig,
+	subscriptionId: string,
 ): Promise<SubscriptionData> {
-  if (!config.apiKey) {
-    throw new Error(
-      "Creem API key is not configured. Please provide an apiKey in the CreemServerConfig."
-    );
-  }
+	if (!config.apiKey) {
+		throw new Error(
+			"Creem API key is not configured. Please provide an apiKey in the CreemServerConfig.",
+		);
+	}
 
-  const creem = createCreemClient(config);
+	const creem = createCreemClient(config);
 
-  const subscription = await creem.retrieveSubscription({
-    xApiKey: config.apiKey,
-    subscriptionId: subscriptionId,
-  });
+	const subscription = await creem.subscriptions.get(subscriptionId, {});
 
-  return subscription as unknown as SubscriptionData;
+	return subscription as unknown as SubscriptionData;
 }
 
 /**
@@ -439,33 +434,33 @@ export async function retrieveSubscription(
  * ```
  */
 export async function searchTransactions(
-  config: CreemServerConfig,
-  filters?: {
-    customerId?: string;
-    productId?: string;
-    orderId?: string;
-    pageNumber?: number;
-    pageSize?: number;
-  }
+	config: CreemServerConfig,
+	filters?: {
+		customerId?: string;
+		productId?: string;
+		orderId?: string;
+		pageNumber?: number;
+		pageSize?: number;
+	},
 ): Promise<SearchTransactionsResponse> {
-  if (!config.apiKey) {
-    throw new Error(
-      "Creem API key is not configured. Please provide an apiKey in the CreemServerConfig."
-    );
-  }
+	if (!config.apiKey) {
+		throw new Error(
+			"Creem API key is not configured. Please provide an apiKey in the CreemServerConfig.",
+		);
+	}
 
-  const creem = createCreemClient(config);
+	const creem = createCreemClient(config);
 
-  const response = await creem.searchTransactions({
-    xApiKey: config.apiKey,
-    customerId: filters?.customerId,
-    productId: filters?.productId,
-    orderId: filters?.orderId,
-    pageNumber: filters?.pageNumber,
-    pageSize: filters?.pageSize,
-  });
+	const response = await creem.transactions.search(
+		filters?.customerId,
+		filters?.orderId,
+		filters?.productId,
+		filters?.pageNumber,
+		filters?.pageSize,
+		{},
+	);
 
-  return response as unknown as SearchTransactionsResponse;
+	return response as unknown as SearchTransactionsResponse;
 }
 
 /**
@@ -513,61 +508,62 @@ export async function searchTransactions(
  * ```
  */
 export async function checkSubscriptionAccess(
-  config: CreemServerConfig,
-  options:
-    | { database: any; userId: string; customerId?: never }
-    | { customerId: string; database?: never; userId?: never }
+	_config: CreemServerConfig,
+	options: // biome-ignore lint/suspicious/noExplicitAny: explore usage
+		| { database: any; userId: string; customerId?: never }
+		| { customerId: string; database?: never; userId?: never },
 ): Promise<{
-  hasAccess: boolean;
-  status?: string;
-  subscriptionId?: string;
-  expiresAt?: Date;
-  productName?: string;
+	hasAccess: boolean;
+	status?: string;
+	subscriptionId?: string;
+	expiresAt?: Date;
+	productName?: string;
 }> {
-  // Database mode
-  if (options.database && options.userId) {
-    try {
-      const subscriptions = await options.database
-        .select()
-        .from("creem_subscription")
-        .where("referenceId", "=", options.userId);
+	// Database mode
+	if (options.database && options.userId) {
+		try {
+			const subscriptions = await options.database
+				.select()
+				.from("creem_subscription")
+				.where("referenceId", "=", options.userId);
 
-      const activeSubscription = subscriptions.find(
-        (sub: any) =>
-          sub.status === "active" ||
-          sub.status === "trialing" ||
-          sub.status === "paid"
-      );
+			const activeSubscription = subscriptions.find(
+				// biome-ignore lint/suspicious/noExplicitAny: remove once database type is set
+				(sub: any) =>
+					sub.status === "active" ||
+					sub.status === "trialing" ||
+					sub.status === "paid",
+			);
 
-      if (activeSubscription) {
-        return {
-          hasAccess: true,
-          status: activeSubscription.status,
-          subscriptionId: activeSubscription.creemSubscriptionId,
-          expiresAt: activeSubscription.periodEnd
-            ? new Date(activeSubscription.periodEnd)
-            : undefined,
-        };
-      }
+			if (activeSubscription) {
+				return {
+					hasAccess: true,
+					status: activeSubscription.status,
+					subscriptionId: activeSubscription.creemSubscriptionId,
+					expiresAt: activeSubscription.periodEnd
+						? new Date(activeSubscription.periodEnd)
+						: undefined,
+				};
+			}
 
-      return { hasAccess: false };
-    } catch (error) {
-      // Fall through to API check
-    }
-  }
+			return { hasAccess: false };
+		} catch {
+			// Fall through to API check
+		}
+	}
 
-  // API mode
-  if (options.customerId) {
-    try {
-      // Note: The Creem SDK doesn't have a direct searchSubscriptions method.
-      // You'll need to retrieve subscriptions by other means or use the database mode.
-      return { hasAccess: false };
-    } catch (error) {
-      return { hasAccess: false };
-    }
-  }
+	// API mode
+	if (options.customerId) {
+		try {
+			// Note: The Creem SDK doesn't have a direct searchSubscriptions method.
+			// You'll need to retrieve subscriptions by other means or use the database mode.
+			return { hasAccess: false };
+		} catch {
+			return { hasAccess: false };
+		}
+	}
 
-  return { hasAccess: false };
+	return { hasAccess: false };
 }
 
 /**
@@ -596,55 +592,59 @@ export async function checkSubscriptionAccess(
  * ```
  */
 export async function getActiveSubscriptions(
-  config: CreemServerConfig,
-  options:
-    | { database: any; userId: string; customerId?: never }
-    | { customerId: string; database?: never; userId?: never }
+	_config: CreemServerConfig,
+	options: // biome-ignore lint/suspicious/noExplicitAny: explore usage
+		| { database: any; userId: string; customerId?: never }
+		| { customerId: string; database?: never; userId?: never },
 ): Promise<
-  Array<{
-    id: string;
-    status: string;
-    productId: string;
-    productName?: string;
-    periodEnd?: Date;
-  }>
+	Array<{
+		id: string;
+		status: string;
+		productId: string;
+		productName?: string;
+		periodEnd?: Date;
+	}>
 > {
-  // Database mode
-  if (options.database && options.userId) {
-    try {
-      const subscriptions = await options.database
-        .select()
-        .from("creem_subscription")
-        .where("referenceId", "=", options.userId);
+	// Database mode
+	if (options.database && options.userId) {
+		try {
+			const subscriptions = await options.database
+				.select()
+				.from("creem_subscription")
+				.where("referenceId", "=", options.userId);
 
-      return subscriptions
-        .filter(
-          (sub: any) =>
-            sub.status === "active" ||
-            sub.status === "trialing" ||
-            sub.status === "paid"
-        )
-        .map((sub: any) => ({
-          id: sub.creemSubscriptionId,
-          status: sub.status,
-          productId: sub.productId,
-          periodEnd: sub.periodEnd ? new Date(sub.periodEnd) : undefined,
-        }));
-    } catch (error) {
-      return [];
-    }
-  }
+			return (
+				subscriptions
+					.filter(
+						// biome-ignore lint/suspicious/noExplicitAny: remove once database type is set
+						(sub: any) =>
+							sub.status === "active" ||
+							sub.status === "trialing" ||
+							sub.status === "paid",
+					)
+					// biome-ignore lint/suspicious/noExplicitAny: remove once database type is set
+					.map((sub: any) => ({
+						id: sub.creemSubscriptionId,
+						status: sub.status,
+						productId: sub.productId,
+						periodEnd: sub.periodEnd ? new Date(sub.periodEnd) : undefined,
+					}))
+			);
+		} catch {
+			return [];
+		}
+	}
 
-  // API mode
-  if (options.customerId) {
-    try {
-      // Note: The Creem SDK doesn't have a direct searchSubscriptions method.
-      // You'll need to retrieve subscriptions by other means or use the database mode.
-      return [];
-    } catch (error) {
-      return [];
-    }
-  }
+	// API mode
+	if (options.customerId) {
+		try {
+			// Note: The Creem SDK doesn't have a direct searchSubscriptions method.
+			// You'll need to retrieve subscriptions by other means or use the database mode.
+			return [];
+		} catch {
+			return [];
+		}
+	}
 
-  return [];
+	return [];
 }

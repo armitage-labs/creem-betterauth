@@ -1,14 +1,14 @@
-import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
 import type { GenericEndpointContext } from "better-auth";
+import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
 import { z } from "zod";
-import type { CreemOptions } from "./types.js";
 import type {
-  CreatePortalInput,
-  CreatePortalResponse,
+	CreatePortalInput,
+	CreatePortalResponse,
 } from "./portal-types.js";
+import type { CreemOptions } from "./types.js";
 
 export const PortalParams = z.object({
-  customerId: z.string().optional(),
+	customerId: z.string().optional(),
 });
 
 export type PortalParams = z.infer<typeof PortalParams>;
@@ -17,57 +17,60 @@ export type PortalParams = z.infer<typeof PortalParams>;
 export type { CreatePortalInput, CreatePortalResponse };
 
 const createPortalHandler = (serverURL: string, options: CreemOptions) => {
-  return async (ctx: GenericEndpointContext) => {
-    const body = (ctx.body || {}) as PortalParams;
+	return async (ctx: GenericEndpointContext) => {
+		const body = (ctx.body || {}) as PortalParams;
 
-    if (!options.apiKey) {
-      return ctx.json(
-        { error: "Creem API key is not configured. Please set the apiKey option when initializing the Creem plugin." },
-        { status: 500 },
-      );
-    }
+		if (!options.apiKey) {
+			return ctx.json(
+				{
+					error:
+						"Creem API key is not configured. Please set the apiKey option when initializing the Creem plugin.",
+				},
+				{ status: 500 },
+			);
+		}
 
-    try {
-      const session = await getSessionFromCtx(ctx);
+		try {
+			const session = await getSessionFromCtx(ctx);
 
-      if (!session?.user?.id) {
-        return ctx.json({ error: "User must be logged in" }, { status: 400 });
-      }
+			if (!session?.user?.id) {
+				return ctx.json({ error: "User must be logged in" }, { status: 400 });
+			}
 
-      if (!session?.user.creemCustomerId) {
-        return ctx.json(
-          { error: "User must have a Creem customer ID" },
-          { status: 400 },
-        );
-      }
+			if (!session?.user.creemCustomerId) {
+				return ctx.json(
+					{ error: "User must have a Creem customer ID" },
+					{ status: 400 },
+				);
+			}
 
-      const response = await fetch(`${serverURL}/v1/customers/billing`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": options.apiKey,
-        },
-        body: JSON.stringify({
-          customer_id: body.customerId || session.user.creemCustomerId,
-        }),
-      });
+			const response = await fetch(`${serverURL}/v1/customers/billing`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"x-api-key": options.apiKey,
+				},
+				body: JSON.stringify({
+					customer_id: body.customerId || session.user.creemCustomerId,
+				}),
+			});
 
-      if (!response.ok) {
-        throw new Error(`Creem API error: ${response.statusText}`);
-      }
+			if (!response.ok) {
+				throw new Error(`Creem API error: ${response.statusText}`);
+			}
 
-      const portal = (await response.json()) as {
-        customer_portal_link: string;
-      };
+			const portal = (await response.json()) as {
+				customer_portal_link: string;
+			};
 
-      return ctx.json({
-        url: portal.customer_portal_link,
-        redirect: true,
-      });
-    } catch (error) {
-      return ctx.json({ error: "Failed to create portal" }, { status: 500 });
-    }
-  };
+			return ctx.json({
+				url: portal.customer_portal_link,
+				redirect: true,
+			});
+		} catch {
+			return ctx.json({ error: "Failed to create portal" }, { status: 500 });
+		}
+	};
 };
 
 /**
@@ -99,15 +102,15 @@ const createPortalHandler = (serverURL: string, options: CreemOptions) => {
  * ```
  */
 export const createPortalEndpoint = (
-  serverURL: string,
-  options: CreemOptions,
+	serverURL: string,
+	options: CreemOptions,
 ) => {
-  return createAuthEndpoint(
-    "/creem/create-portal",
-    {
-      method: "POST",
-      body: PortalParams,
-    },
-    createPortalHandler(serverURL, options),
-  );
+	return createAuthEndpoint(
+		"/creem/create-portal",
+		{
+			method: "POST",
+			body: PortalParams,
+		},
+		createPortalHandler(serverURL, options),
+	);
 };

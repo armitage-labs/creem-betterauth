@@ -1,79 +1,82 @@
-import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
 import type { GenericEndpointContext } from "better-auth";
-import { Creem } from "creem";
+import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
+import type { Creem } from "creem";
 import { z } from "zod";
-import type { CreemOptions } from "./types.js";
 import type {
-  SearchTransactionsInput,
-  SearchTransactionsResponse,
-  TransactionData,
+	SearchTransactionsInput,
+	SearchTransactionsResponse,
+	TransactionData,
 } from "./search-transactions-types.js";
+import type { CreemOptions } from "./types.js";
 
 export const SearchTransactionsParams = z.object({
-  customerId: z.string().optional(),
-  pageNumber: z.number().min(1).optional(),
-  pageSize: z.number().positive().optional(),
-  productId: z.string().optional(),
-  orderId: z.string().optional(),
+	customerId: z.string().optional(),
+	pageNumber: z.number().min(1).optional(),
+	pageSize: z.number().positive().optional(),
+	productId: z.string().optional(),
+	orderId: z.string().optional(),
 });
 
 export type SearchTransactionsParams = z.infer<typeof SearchTransactionsParams>;
 
 // Re-export types for convenience
 export type {
-  SearchTransactionsInput,
-  SearchTransactionsResponse,
-  TransactionData,
+	SearchTransactionsInput,
+	SearchTransactionsResponse,
+	TransactionData,
 };
 
 const createSearchTransactionsHandler = (
-  creem: Creem,
-  options: CreemOptions,
+	creem: Creem,
+	options: CreemOptions,
 ) => {
-  return async (ctx: GenericEndpointContext) => {
-    const body = ctx.body as SearchTransactionsParams;
+	return async (ctx: GenericEndpointContext) => {
+		const body = ctx.body as SearchTransactionsParams;
 
-    if (!options.apiKey) {
-      return ctx.json(
-        { error: "Creem API key is not configured. Please set the apiKey option when initializing the Creem plugin." },
-        { status: 500 },
-      );
-    }
+		if (!options.apiKey) {
+			return ctx.json(
+				{
+					error:
+						"Creem API key is not configured. Please set the apiKey option when initializing the Creem plugin.",
+				},
+				{ status: 500 },
+			);
+		}
 
-    try {
-      const session = await getSessionFromCtx(ctx);
+		try {
+			const session = await getSessionFromCtx(ctx);
 
-      if (!session?.user?.id) {
-        return ctx.json({ error: "User must be logged in" }, { status: 400 });
-      }
+			if (!session?.user?.id) {
+				return ctx.json({ error: "User must be logged in" }, { status: 400 });
+			}
 
-      // Use the user's Creem customer ID if no customerId is provided
-      const customerId = body.customerId || session.user.creemCustomerId;
+			// Use the user's Creem customer ID if no customerId is provided
+			const customerId = body.customerId || session.user.creemCustomerId;
 
-      if (!customerId) {
-        return ctx.json(
-          { error: "User must have a Creem customer ID" },
-          { status: 400 },
-        );
-      }
+			if (!customerId) {
+				return ctx.json(
+					{ error: "User must have a Creem customer ID" },
+					{ status: 400 },
+				);
+			}
 
-      const transactions = await creem.searchTransactions({
-        xApiKey: options.apiKey,
-        customerId,
-        pageNumber: body.pageNumber,
-        pageSize: body.pageSize,
-        productId: body.productId,
-        orderId: body.orderId,
-      });
+			const transactions = await creem.transactions.search(
+				customerId,
+				body.orderId,
+				body.productId,
+				body.pageNumber,
+				body.pageSize,
+				{},
+			);
 
-      return ctx.json(transactions);
-    } catch (error) {
-      return ctx.json(
-        { error: "Failed to search transactions" },
-        { status: 500 },
-      );
-    }
-  };
+			return ctx.json(transactions);
+		} catch {
+			return ctx.json(
+				{ error: "Failed to search transactions" },
+				{ status: 500 },
+			);
+		}
+	};
 };
 
 /**
@@ -110,15 +113,15 @@ const createSearchTransactionsHandler = (
  * ```
  */
 export const createSearchTransactionsEndpoint = (
-  creem: Creem,
-  options: CreemOptions,
+	creem: Creem,
+	options: CreemOptions,
 ) => {
-  return createAuthEndpoint(
-    "/creem/search-transactions",
-    {
-      method: "POST",
-      body: SearchTransactionsParams,
-    },
-    createSearchTransactionsHandler(creem, options),
-  );
+	return createAuthEndpoint(
+		"/creem/search-transactions",
+		{
+			method: "POST",
+			body: SearchTransactionsParams,
+		},
+		createSearchTransactionsHandler(creem, options),
+	);
 };

@@ -30,38 +30,36 @@ import type { creem } from "./index.js";
  * ```
  */
 export const creemClient = () => {
-  return {
-    id: "creem",
-    $InferServerPlugin: {} as ReturnType<typeof creem>,
-    pathMethods: {
-      "/creem/create-portal": "POST",
-    },
-  } satisfies BetterAuthClientPlugin;
+	return {
+		id: "creem",
+		$InferServerPlugin: {} as ReturnType<typeof creem>,
+		pathMethods: {
+			"/creem/create-portal": "POST",
+		},
+	} satisfies BetterAuthClientPlugin;
 };
 
+export type {
+	CancelSubscriptionInput,
+	CancelSubscriptionResponse,
+} from "./cancel-subscription-types.js";
 // Re-export types for client-side usage
 export type {
-  CreateCheckoutInput,
-  CreateCheckoutResponse,
-  CheckoutCustomer,
+	CheckoutCustomer,
+	CreateCheckoutInput,
+	CreateCheckoutResponse,
 } from "./checkout-types.js";
-
-export type { CreatePortalInput, CreatePortalResponse } from "./portal-types.js";
-
-export type {
-  CancelSubscriptionInput,
-  CancelSubscriptionResponse,
-} from "./cancel-subscription-types.js";
-
-export type {
-  RetrieveSubscriptionInput,
-  SubscriptionData,
-} from "./retrieve-subscription-types.js";
-
-export type {
-  SearchTransactionsInput,
-  SearchTransactionsResponse,
-  TransactionData,
-} from "./search-transactions-types.js";
-
 export type { HasAccessGrantedResponse } from "./has-active-subscription-types.js";
+export type {
+	CreatePortalInput,
+	CreatePortalResponse,
+} from "./portal-types.js";
+export type {
+	RetrieveSubscriptionInput,
+	SubscriptionData,
+} from "./retrieve-subscription-types.js";
+export type {
+	SearchTransactionsInput,
+	SearchTransactionsResponse,
+	TransactionData,
+} from "./search-transactions-types.js";

@@ -1,125 +1,127 @@
-import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
 import type { GenericEndpointContext } from "better-auth";
-import { Creem } from "creem";
+import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
+import type { Creem } from "creem";
 import { z } from "zod";
-import type { CreemOptions } from "./types.js";
 import type {
-  CancelSubscriptionInput,
-  CancelSubscriptionResponse,
+	CancelSubscriptionInput,
+	CancelSubscriptionResponse,
 } from "./cancel-subscription-types.js";
+import type { CreemOptions } from "./types.js";
 
 export const CancelSubscriptionParams = z.object({
-  id: z.string().optional(),
+	id: z.string().optional(),
 });
 
 export type CancelSubscriptionParams = z.infer<typeof CancelSubscriptionParams>;
 
 interface Subscription {
-  id: string;
-  productId: string;
-  referenceId: string;
-  creemCustomerId?: string;
-  creemSubscriptionId?: string;
-  creemOrderId?: string;
-  status: string;
-  periodStart?: Date;
-  periodEnd?: Date;
-  cancelAtPeriodEnd?: boolean;
+	id: string;
+	productId: string;
+	referenceId: string;
+	creemCustomerId?: string;
+	creemSubscriptionId?: string;
+	creemOrderId?: string;
+	status: string;
+	periodStart?: Date;
+	periodEnd?: Date;
+	cancelAtPeriodEnd?: boolean;
 }
 
 // Re-export types for convenience
 export type { CancelSubscriptionInput, CancelSubscriptionResponse };
 
 const createCancelSubscriptionHandler = (
-  creem: Creem,
-  options: CreemOptions,
+	creem: Creem,
+	options: CreemOptions,
 ) => {
-  return async (ctx: GenericEndpointContext) => {
-    const body = ctx.body as CancelSubscriptionParams;
+	return async (ctx: GenericEndpointContext) => {
+		const body = ctx.body as CancelSubscriptionParams;
 
-    if (!options.apiKey) {
-      return ctx.json(
-        { error: "Creem API key is not configured. Please set the apiKey option when initializing the Creem plugin." },
-        { status: 500 },
-      );
-    }
+		if (!options.apiKey) {
+			return ctx.json(
+				{
+					error:
+						"Creem API key is not configured. Please set the apiKey option when initializing the Creem plugin.",
+				},
+				{ status: 500 },
+			);
+		}
 
-    try {
-      const session = await getSessionFromCtx(ctx);
+		try {
+			const session = await getSessionFromCtx(ctx);
 
-      if (!session?.user?.id) {
-        return ctx.json({ error: "User must be logged in" }, { status: 400 });
-      }
+			if (!session?.user?.id) {
+				return ctx.json({ error: "User must be logged in" }, { status: 400 });
+			}
 
-      let subscriptionId = body.id;
+			let subscriptionId = body.id;
 
-      // Check if database persistence is enabled
-      const shouldPersist = options.persistSubscriptions !== false;
+			// Check if database persistence is enabled
+			const shouldPersist = options.persistSubscriptions !== false;
 
-      if (shouldPersist) {
-        // If database persistence is enabled, fetch the user's subscription from the database
-        const userId = session.user.id;
+			if (shouldPersist) {
+				// If database persistence is enabled, fetch the user's subscription from the database
+				const userId = session.user.id;
 
-        // Find all subscriptions for this user
-        const subscriptions = await ctx.context.adapter.findMany<Subscription>({
-          model: "creem_subscription",
-          where: [{ field: "referenceId", value: userId }],
-        });
+				// Find all subscriptions for this user
+				const subscriptions = await ctx.context.adapter.findMany<Subscription>({
+					model: "creem_subscription",
+					where: [{ field: "referenceId", value: userId }],
+				});
 
-        if (subscriptions && subscriptions.length > 0) {
-          // Find an active subscription (active, trialing, or any non-expired subscription)
-          const activeSubscription = subscriptions.find(
-            (sub) =>
-              sub.status === "active" ||
-              sub.status === "trialing" ||
-              sub.status === "unpaid" ||
-              sub.status === "past_due",
-          );
+				if (subscriptions && subscriptions.length > 0) {
+					// Find an active subscription (active, trialing, or any non-expired subscription)
+					const activeSubscription = subscriptions.find(
+						(sub) =>
+							sub.status === "active" ||
+							sub.status === "trialing" ||
+							sub.status === "unpaid" ||
+							sub.status === "past_due",
+					);
 
-          if (activeSubscription && activeSubscription.creemSubscriptionId) {
-            // Use the subscription ID from the database
-            subscriptionId = activeSubscription.creemSubscriptionId;
-          } else if (!subscriptionId) {
-            // If no active subscription and no ID provided, return error
-            return ctx.json(
-              { error: "No active subscription found for this user" },
-              { status: 404 },
-            );
-          }
-        } else if (!subscriptionId) {
-          // No subscriptions in database and no ID provided
-          return ctx.json(
-            { error: "No subscription found for this user" },
-            { status: 404 },
-          );
-        }
-      } else if (!subscriptionId) {
-        // If persistence is disabled and no ID provided, return error
-        return ctx.json(
-          {
-            error:
-              "Subscription ID is required when database persistence is disabled",
-          },
-          { status: 400 },
-        );
-      }
+					if (activeSubscription?.creemSubscriptionId) {
+						// Use the subscription ID from the database
+						subscriptionId = activeSubscription.creemSubscriptionId;
+					} else if (!subscriptionId) {
+						// If no active subscription and no ID provided, return error
+						return ctx.json(
+							{ error: "No active subscription found for this user" },
+							{ status: 404 },
+						);
+					}
+				} else if (!subscriptionId) {
+					// No subscriptions in database and no ID provided
+					return ctx.json(
+						{ error: "No subscription found for this user" },
+						{ status: 404 },
+					);
+				}
+			} else if (!subscriptionId) {
+				// If persistence is disabled and no ID provided, return error
+				return ctx.json(
+					{
+						error:
+							"Subscription ID is required when database persistence is disabled",
+					},
+					{ status: 400 },
+				);
+			}
 
-      await creem.cancelSubscription({
-        xApiKey: options.apiKey,
-        id: subscriptionId,
-      });
+			await creem.subscriptions.cancel(subscriptionId, {
+				mode: "immediate",
+			});
 
-      return ctx.json({
-        success: true,
-        message: "Subscription cancelled successfully",
-      });
-    } catch (error) {
-      return ctx.json(
-        { error: "Failed to cancel subscription" },
-        { status: 500 },
-      );
-    }
-  };
+			return ctx.json({
+				success: true,
+				message: "Subscription cancelled successfully",
+			});
+		} catch {
+			return ctx.json(
+				{ error: "Failed to cancel subscription" },
+				{ status: 500 },
+			);
+		}
+	};
 };
 
 /**
@@ -165,15 +167,15 @@ const createCancelSubscriptionHandler = (
  * ```
  */
 export const createCancelSubscriptionEndpoint = (
-  creem: Creem,
-  options: CreemOptions,
+	creem: Creem,
+	options: CreemOptions,
 ) => {
-  return createAuthEndpoint(
-    "/creem/cancel-subscription",
-    {
-      method: "POST",
-      body: CancelSubscriptionParams,
-    },
-    createCancelSubscriptionHandler(creem, options),
-  );
+	return createAuthEndpoint(
+		"/creem/cancel-subscription",
+		{
+			method: "POST",
+			body: CancelSubscriptionParams,
+		},
+		createCancelSubscriptionHandler(creem, options),
+	);
 };
