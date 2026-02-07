@@ -109,6 +109,7 @@ export const creem = (options: CreemOptions) => {
 		: "https://api.creem.io";
 
 	const creem = new Creem({
+		apiKey: options.apiKey,
 		serverURL,
 	});
 
