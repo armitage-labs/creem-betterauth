@@ -186,6 +186,14 @@ export interface CreemOptions {
   ) => void;
 
   /**
+   * Called when a subscription is scheduled for cancellation at period end.
+   * All properties are flattened for easy destructuring.
+   */
+  onSubscriptionScheduledCancel?: (
+    data: FlatSubscriptionEvent<"subscription.scheduled_cancel">
+  ) => void;
+
+  /**
    * Called when a subscription is paid.
    * All properties are flattened for easy destructuring.
    */

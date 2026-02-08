@@ -4,6 +4,7 @@ import type {
   NormalizedSubscriptionActiveEvent,
   NormalizedSubscriptionTrialingEvent,
   NormalizedSubscriptionCanceledEvent,
+  NormalizedSubscriptionScheduledCancelEvent,
   NormalizedSubscriptionPaidEvent,
   NormalizedSubscriptionExpiredEvent,
   NormalizedSubscriptionUnpaidEvent,
@@ -262,6 +263,23 @@ export async function onSubscriptionCanceled(
 }
 
 /**
+ * Handle subscription.scheduled_cancel event
+ * Updates subscription status to scheduled_cancel
+ */
+export async function onSubscriptionScheduledCancel(
+  ctx: GenericEndpointContext,
+  event: NormalizedSubscriptionScheduledCancelEvent,
+  options: CreemOptions,
+) {
+  await updateSubscriptionFromEvent(
+    ctx,
+    event.object,
+    "scheduled_cancel",
+    options,
+  );
+}
+
+/**
  * Handle subscription.paid event
  * Updates subscription with latest payment information
  */
@@ -414,6 +432,12 @@ async function updateSubscriptionFromEvent(
       periodEnd: subscriptionData.current_period_end_date
         ? new Date(subscriptionData.current_period_end_date)
         : subscription.periodEnd,
+      cancelAtPeriodEnd:
+        status === "scheduled_cancel"
+          ? true
+          : status === "canceled"
+            ? false
+            : subscription.cancelAtPeriodEnd,
     };
 
     // Update subscription

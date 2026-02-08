@@ -7,6 +7,7 @@ import {
   onSubscriptionActive,
   onSubscriptionTrialing,
   onSubscriptionCanceled,
+  onSubscriptionScheduledCancel,
   onSubscriptionPaid,
   onSubscriptionExpired,
   onSubscriptionUnpaid,
@@ -110,6 +111,16 @@ const createWebhookHandler = (options: CreemOptions) => {
           });
           break;
 
+        case "subscription.scheduled_cancel":
+          await onSubscriptionScheduledCancel(ctx, event, options);
+          options.onSubscriptionScheduledCancel?.({
+            webhookEventType: event.eventType,
+            webhookId: event.id,
+            webhookCreatedAt: event.created_at,
+            ...event.object,
+          });
+          break;
+
         case "subscription.paid":
           await onSubscriptionPaid(ctx, event, options);
           options.onGrantAccess?.({
@@ -183,8 +194,7 @@ const createWebhookHandler = (options: CreemOptions) => {
           break;
 
         default:
-          ctx.json({ error: "Unknown event type" }, { status: 400 });
-          break;
+          return ctx.json({ error: "Unknown event type" }, { status: 400 });
       }
 
       return ctx.json({ message: "Webhook received" });
