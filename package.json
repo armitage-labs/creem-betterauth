@@ -10,7 +10,7 @@
 		"build": "npm run build:cjs && npm run build:esm && npm run build:package-json",
 		"build:cjs": "tsc -p tsconfig.cjs.json",
 		"build:esm": "tsc -p tsconfig.esm.json",
-		"build:package-json": "echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json && echo '{\"type\":\"module\"}' > dist/esm/package.json",
+		"build:package-json": "node ./buildPackageJson.mjs",
 		"typecheck": "tsc --noEmit",
 		"biome:check": "npx -y @biomejs/biome check",
 		"biome:lint": "npx -y @biomejs/biome lint",
