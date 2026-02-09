@@ -167,7 +167,7 @@ cd ../.. && npm run build
 1. Make sure `CREEM_WEBHOOK_SECRET` is set in `.env.local`
 2. Configure the webhook URL in your Creem dashboard to point to:
    ```
-   http://localhost:3000/api/auth/creem-webhook
+   http://localhost:3000/api/auth/creem/webhook
    ```
 3. Use a tool like ngrok for local webhook testing:
    ```bash

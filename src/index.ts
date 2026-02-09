@@ -84,7 +84,7 @@ export type {
  *
  * @example
  * ```typescript
- * import { creem } from "./lib/creem-betterauth";
+ * import { creem } from "@creem_io/better-auth";
  *
  * export const auth = betterAuth({
  *   plugins: [

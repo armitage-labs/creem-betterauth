@@ -152,11 +152,11 @@ This guide walks you through testing all features of the Creem Better-Auth plugi
 
 3. In Creem Dashboard:
    - Go to Webhooks
-   - Add webhook: `https://abc123.ngrok.io/api/auth/creem-webhook`
+   - Add webhook: `https://abc123.ngrok.io/api/auth/creem/webhook`
    - Select events: 
      - `checkout.completed`
-     - `subscription.updated`
-     - `subscription.cancelled`
+     - `subscription.update`
+     - `subscription.canceled`
      - `refund.created`
 
 #### Test Webhook Events
@@ -164,20 +164,20 @@ This guide walks you through testing all features of the Creem Better-Auth plugi
 **Event: checkout.completed**
 
 1. Complete a new checkout
-2. ✅ **Expected**: Webhook POST to `/api/auth/creem-webhook`
-3. ✅ **Expected**: `onGrantAccess` called with reason: `"checkout_completed"`
+2. ✅ **Expected**: Webhook POST to `/api/auth/creem/webhook`
+3. ✅ **Expected**: `onCheckoutCompleted` called; it may create/update subscriptions and set the user's `creemCustomerId`. Note: `onGrantAccess` is triggered on subscription lifecycle events (e.g., `subscription.active`, `subscription.paid`), not on `checkout.completed`.
 
-**Event: subscription.cancelled**
+**Event: subscription.canceled**
 
 1. Cancel subscription via portal
 2. ✅ **Expected**: Webhook POST received
-3. ✅ **Expected**: `onRevokeAccess` called with reason: `"subscription_cancelled"`
+3. ✅ **Expected**: `onSubscriptionCanceled` called (does not automatically call `onRevokeAccess`).
 
 **Event: refund.created**
 
 1. Create refund in Creem dashboard
 2. ✅ **Expected**: Webhook POST received
-3. ✅ **Expected**: `onRevokeAccess` called with reason: `"refund_created"`
+3. ✅ **Expected**: `onRefundCreated` called (does not automatically revoke access).
 
 **Webhook Verification:**
 - Check server console for signature verification logs
@@ -302,8 +302,8 @@ Use this checklist to verify all features:
 
 ### Webhooks
 - [ ] checkout.completed event
-- [ ] subscription.updated event
-- [ ] subscription.cancelled event
+- [ ] subscription.update event
+- [ ] subscription.canceled event
 - [ ] refund.created event
 - [ ] Signature verification
 

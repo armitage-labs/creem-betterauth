@@ -129,7 +129,7 @@ ngrok http 3000
 
 # Copy the HTTPS URL
 # Add to Creem Dashboard → Webhooks:
-# https://your-url.ngrok.io/api/auth/creem-webhook
+# https://your-url.ngrok.io/api/auth/creem/webhook
 ```
 
 ### Explore Features

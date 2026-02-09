@@ -128,7 +128,7 @@ Approximate breakdown:
 - ✅ `/api/auth/retrieve-subscription` - Get subscription details
 - ✅ `/api/auth/search-transactions` - Search transactions
 - ✅ `/api/auth/has-access-granted` - Check subscription status
-- ✅ `/api/auth/creem-webhook` - Handle Creem webhooks
+- ✅ `/api/auth/creem/webhook` - Handle Creem webhooks
 
 ### Client Methods Used
 
@@ -144,11 +144,11 @@ creemClient.hasAccessGranted()
 
 ```typescript
 onGrantAccess: async (context) => {
-  // Handles: checkout.completed, subscription.updated
+  // Handles: subscription.active, subscription.trialing, subscription.paid
 }
 
 onRevokeAccess: async (context) => {
-  // Handles: subscription.cancelled, refund.created
+  // Handles: subscription.expired, subscription.paused
 }
 ```
 

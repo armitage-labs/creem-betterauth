@@ -103,7 +103,7 @@ creem({
 - `/api/auth/retrieve-subscription` - Get subscription details
 - `/api/auth/search-transactions` - Search transactions
 - `/api/auth/has-access-granted` - Check subscription status
-- `/api/auth/creem-webhook` - Handle Creem webhooks
+- `/api/auth/creem/webhook` - Handle Creem webhooks
 
 ### 3. Checkout Process
 
@@ -117,7 +117,7 @@ creem({
 3. Redirected to Creem checkout
 4. Completes payment
 5. Redirected back to success page
-6. `onGrantAccess` callback triggered
+6. If subscription becomes active, `onGrantAccess` will be triggered (handled via subscription lifecycle events)
 7. User gains access to premium features
 
 ### 4. Subscription Management
@@ -150,10 +150,10 @@ creem({
 - `src/lib/auth.ts` - Webhook callbacks
 
 **Events Handled:**
-- `checkout.completed` → Grant access
-- `subscription.updated` → Update access
-- `subscription.cancelled` → Revoke access
-- `refund.created` → Revoke access
+- `checkout.completed` → Create/update subscription and set `creemCustomerId` (`onCheckoutCompleted`)
+- `subscription.update` → Update subscription (`onSubscriptionUpdate`)
+- `subscription.canceled` → Subscription canceled (`onSubscriptionCanceled`)
+- `refund.created` → Refund created (`onRefundCreated`)
 
 **Security:**
 - Signature verification

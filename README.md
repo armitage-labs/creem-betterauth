@@ -21,9 +21,9 @@ npm install @creem_io/better-auth better-auth creem
 
 ### Required Dependencies
 
-- `better-auth` ^1.3.34 (peer dependency)
-- `creem` ^0.4.0 (included)
-- `zod` ^3.23.8 (included)
+- `better-auth` ^1.4.18 (peer dependency)
+- `creem` ^1.3.6 (peer dependency)
+- `zod` ^3.23.8 || ^4 (peer dependency)
 
 ## 🚀 Quick Start
 

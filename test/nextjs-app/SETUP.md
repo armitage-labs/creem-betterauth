@@ -130,7 +130,7 @@ cloudflared tunnel --url http://localhost:3000
 
 In your Creem dashboard:
 1. Go to Webhooks settings
-2. Add your ngrok/tunnel URL: `https://your-url.ngrok.io/api/auth/creem-webhook`
+2. Add your ngrok/tunnel URL: `https://your-url.ngrok.io/api/auth/creem/webhook`
 3. Select the events you want to receive
 4. Save the webhook configuration
 
