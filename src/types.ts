@@ -1,4 +1,7 @@
-import type { BetterAuthPluginDBSchema } from "better-auth";
+import type {
+	BetterAuthPluginDBSchema,
+	GenericEndpointContext,
+} from "better-auth";
 import type {
 	// Import normalized entity types for flattening
 	NormalizedCheckoutEntity,
@@ -137,23 +140,32 @@ export interface CreemOptions {
 	 * { webhookEventType, webhookId, webhookCreatedAt, order, product, customer, subscription, status, ... }
 	 *
 	 * @example
-	 * onCheckoutCompleted: async ({ webhookEventType, product, customer, order, subscription }) => {
+	 * onCheckoutCompleted: async (ctx, { webhookEventType, product, customer, order, subscription }) => {
 	 *   console.log(`Checkout completed: ${customer?.email} purchased ${product.name}`);
 	 * }
 	 */
-	onCheckoutCompleted?: (data: FlatCheckoutCompleted) => void;
+	onCheckoutCompleted?: (
+		ctx: GenericEndpointContext,
+		data: FlatCheckoutCompleted,
+	) => void;
 
 	/**
 	 * Called when a refund is created.
 	 * All properties are flattened for easy destructuring.
 	 */
-	onRefundCreated?: (data: FlatRefundCreated) => void;
+	onRefundCreated?: (
+		ctx: GenericEndpointContext,
+		data: FlatRefundCreated,
+	) => void;
 
 	/**
 	 * Called when a dispute is created.
 	 * All properties are flattened for easy destructuring.
 	 */
-	onDisputeCreated?: (data: FlatDisputeCreated) => void;
+	onDisputeCreated?: (
+		ctx: GenericEndpointContext,
+		data: FlatDisputeCreated,
+	) => void;
 
 	/**
 	 * Called when a subscription becomes active.
@@ -161,11 +173,12 @@ export interface CreemOptions {
 	 * { webhookEventType, webhookId, webhookCreatedAt, product, customer, status, metadata, ... }
 	 *
 	 * @example
-	 * onSubscriptionActive: async ({ product, customer, status }) => {
+	 * onSubscriptionActive: async (ctx, { product, customer, status }) => {
 	 *   console.log(`${customer.email} subscribed to ${product.name}`);
 	 * }
 	 */
 	onSubscriptionActive?: (
+		ctx: GenericEndpointContext,
 		data: FlatSubscriptionEvent<"subscription.active">,
 	) => void;
 
@@ -174,6 +187,7 @@ export interface CreemOptions {
 	 * All properties are flattened for easy destructuring.
 	 */
 	onSubscriptionTrialing?: (
+		ctx: GenericEndpointContext,
 		data: FlatSubscriptionEvent<"subscription.trialing">,
 	) => void;
 
@@ -182,6 +196,7 @@ export interface CreemOptions {
 	 * All properties are flattened for easy destructuring.
 	 */
 	onSubscriptionCanceled?: (
+		ctx: GenericEndpointContext,
 		data: FlatSubscriptionEvent<"subscription.canceled">,
 	) => void;
 
@@ -190,6 +205,7 @@ export interface CreemOptions {
 	 * All properties are flattened for easy destructuring.
 	 */
 	onSubscriptionPaid?: (
+		ctx: GenericEndpointContext,
 		data: FlatSubscriptionEvent<"subscription.paid">,
 	) => void;
 
@@ -198,6 +214,7 @@ export interface CreemOptions {
 	 * All properties are flattened for easy destructuring.
 	 */
 	onSubscriptionExpired?: (
+		ctx: GenericEndpointContext,
 		data: FlatSubscriptionEvent<"subscription.expired">,
 	) => void;
 
@@ -206,6 +223,7 @@ export interface CreemOptions {
 	 * All properties are flattened for easy destructuring.
 	 */
 	onSubscriptionUnpaid?: (
+		ctx: GenericEndpointContext,
 		data: FlatSubscriptionEvent<"subscription.unpaid">,
 	) => void;
 
@@ -214,6 +232,7 @@ export interface CreemOptions {
 	 * All properties are flattened for easy destructuring.
 	 */
 	onSubscriptionUpdate?: (
+		ctx: GenericEndpointContext,
 		data: FlatSubscriptionEvent<"subscription.update">,
 	) => void;
 
@@ -222,6 +241,7 @@ export interface CreemOptions {
 	 * All properties are flattened for easy destructuring.
 	 */
 	onSubscriptionPastDue?: (
+		ctx: GenericEndpointContext,
 		data: FlatSubscriptionEvent<"subscription.past_due">,
 	) => void;
 
@@ -230,6 +250,7 @@ export interface CreemOptions {
 	 * All properties are flattened for easy destructuring.
 	 */
 	onSubscriptionPaused?: (
+		ctx: GenericEndpointContext,
 		data: FlatSubscriptionEvent<"subscription.paused">,
 	) => void;
 
@@ -244,13 +265,16 @@ export interface CreemOptions {
 	 * Implement this as an idempotent operation (safe to call repeatedly).
 	 *
 	 * @example
-	 * onGrantAccess: async ({ reason, product, customer, metadata }) => {
+	 * onGrantAccess: async (ctx, { reason, product, customer, metadata }) => {
 	 *   const userId = metadata?.referenceId as string;
 	 *   console.log(`Granting ${reason} to ${customer.email} for ${product.name}`);
 	 *   // Your database logic here
 	 * }
 	 */
-	onGrantAccess?: (context: GrantAccessContext) => void | Promise<void>;
+	onGrantAccess?: (
+		ctx: GenericEndpointContext,
+		data: GrantAccessContext,
+	) => void | Promise<void>;
 
 	/**
 	 * Called when a user's access should be revoked.
@@ -263,11 +287,14 @@ export interface CreemOptions {
 	 * Implement this as an idempotent operation (safe to call repeatedly).
 	 *
 	 * @example
-	 * onRevokeAccess: async ({ reason, product, customer, metadata }) => {
+	 * onRevokeAccess: async (ctx, { reason, product, customer, metadata }) => {
 	 *   const userId = metadata?.referenceId as string;
 	 *   console.log(`Revoking access (${reason}) from ${customer.email}`);
 	 *   // Your database logic here
 	 * }
 	 */
-	onRevokeAccess?: (context: RevokeAccessContext) => void | Promise<void>;
+	onRevokeAccess?: (
+		ctx: GenericEndpointContext,
+		data: RevokeAccessContext,
+	) => void | Promise<void>;
 }
