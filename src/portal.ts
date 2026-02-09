@@ -9,6 +9,7 @@ import type { CreemOptions } from "./types.js";
 
 export const PortalParams = z.object({
 	customerId: z.string().optional(),
+	redirect: z.boolean().optional().prefault(true).default(true),
 });
 
 export type PortalParams = z.infer<typeof PortalParams>;
@@ -65,7 +66,7 @@ const createPortalHandler = (serverURL: string, options: CreemOptions) => {
 
 			return ctx.json({
 				url: portal.customer_portal_link,
-				redirect: true,
+				redirect: body.redirect,
 			});
 		} catch {
 			return ctx.json({ error: "Failed to create portal" }, { status: 500 });

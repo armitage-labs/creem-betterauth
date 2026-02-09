@@ -2,10 +2,69 @@
  * Creem Webhook Types
  *
  * This file contains all the TypeScript types needed to work with Creem webhooks.
- * It's designed to be standalone and can be copied to external projects.
- *
- * No external dependencies required - just TypeScript!
  */
+
+import type {
+	Checkbox as CheckboxFromSdk,
+	CheckoutEntity as CheckoutEntityFromSdk,
+	Status as CheckoutStatusFromSdk,
+	CustomerEntity as CustomerEntityFromSdk,
+	CustomField as CustomFieldFromSdk,
+	FeatureEntity as FeatureEntityFromSdk,
+	LicenseEntity as LicenseEntityFromSdk,
+	OrderEntity as OrderEntityFromSdk,
+	ProductEntity as ProductEntityFromSdk,
+	ProductFeatureEntity as ProductFeatureEntityFromSdk,
+	SubscriptionEntity as SubscriptionEntityFromSdk,
+	SubscriptionItemEntity as SubscriptionItemEntityFromSdk,
+	SubscriptionStatus as SubscriptionStatusFromSdk,
+	Text as TextFromSdk,
+	TransactionEntity as TransactionEntityFromSdk,
+} from "creem/models/components";
+
+type CamelToSnakeCase<S extends string> = S extends `${infer T}${infer U}`
+	? `${T extends Uncapitalize<T> ? T : `_${Lowercase<T>}`}${CamelToSnakeCase<U>}`
+	: S;
+
+type SnakeCaseKeys<T> = {
+	[K in keyof T as CamelToSnakeCase<K & string>]: T[K];
+};
+
+type Checkbox = SnakeCaseKeys<CheckboxFromSdk>;
+type CheckoutEntity = SnakeCaseKeys<CheckoutEntityFromSdk>;
+type CheckoutStatus = SnakeCaseKeys<CheckoutStatusFromSdk>;
+type CustomerEntity = SnakeCaseKeys<CustomerEntityFromSdk>;
+type CustomField = SnakeCaseKeys<CustomFieldFromSdk>;
+type FeatureEntity = SnakeCaseKeys<FeatureEntityFromSdk>;
+type LicenseEntity = SnakeCaseKeys<LicenseEntityFromSdk>;
+type OrderEntity = SnakeCaseKeys<OrderEntityFromSdk>;
+type ProductEntity = SnakeCaseKeys<ProductEntityFromSdk>;
+type ProductFeatureEntity = SnakeCaseKeys<ProductFeatureEntityFromSdk>;
+type SubscriptionEntity = SnakeCaseKeys<SubscriptionEntityFromSdk> & {
+	metadata?: Metadata;
+};
+type SubscriptionItemEntity = SnakeCaseKeys<SubscriptionItemEntityFromSdk>;
+type SubscriptionStatus = SnakeCaseKeys<SubscriptionStatusFromSdk>;
+type Text = SnakeCaseKeys<TextFromSdk>;
+type TransactionEntity = SnakeCaseKeys<TransactionEntityFromSdk>;
+
+export type {
+	Checkbox,
+	CheckoutEntity,
+	CheckoutStatus,
+	CustomerEntity,
+	CustomField,
+	FeatureEntity,
+	LicenseEntity,
+	OrderEntity,
+	ProductEntity,
+	ProductFeatureEntity,
+	SubscriptionEntity,
+	SubscriptionItemEntity,
+	SubscriptionStatus,
+	Text,
+	TransactionEntity,
+};
 
 // ============================================================================
 // Base Types
@@ -27,209 +86,6 @@ export interface BaseEntity {
 }
 
 // ============================================================================
-// Custom Field Types
-// ============================================================================
-
-export interface Text {
-	/** Maximum character length constraint for the input */
-	max_length?: number;
-	/** Minimum character length requirement for the input */
-	minimum_length?: number;
-	/** The value of the input */
-	value?: string;
-}
-
-export interface Checkbox {
-	/** The markdown text to display for the checkbox */
-	label?: string;
-	/** The value of the checkbox (checked or not) */
-	value?: boolean;
-}
-
-export interface CustomField {
-	/** The type of the field */
-	type: "text" | "checkbox";
-	/** Unique key for custom field. Must be unique, alphanumeric, up to 200 characters */
-	key: string;
-	/** The label for the field, displayed to the customer, up to 50 characters */
-	label: string;
-	/** Whether the customer is required to complete the field. Defaults to false */
-	optional?: boolean;
-	/** Configuration for text field type */
-	text?: Text;
-	/** Configuration for checkbox field type */
-	checkbox?: Checkbox;
-}
-
-// ============================================================================
-// Customer Entity
-// ============================================================================
-
-export interface CustomerEntity extends BaseEntity {
-	/** String representing the object's type */
-	object: "customer";
-	/** Customer email address */
-	email: string;
-	/** Customer name */
-	name?: string;
-	/** The ISO alpha-2 country code for the customer */
-	country: string;
-	/** Creation date of the customer */
-	created_at: Date;
-	/** Last updated date of the customer */
-	updated_at: Date;
-}
-
-// ============================================================================
-// Product Entity
-// ============================================================================
-
-export interface FeatureEntity {
-	/** Unique identifier for the feature */
-	id: string;
-	/** The feature type */
-	type: "custom" | "github-repo" | "discord" | "file" | "link" | "licence-key";
-	/** A brief description of the feature */
-	description: string;
-}
-
-export interface ProductEntity extends BaseEntity {
-	/** String representing the object's type */
-	object: "product";
-	/** The name of the product */
-	name: string;
-	/** A brief description of the product */
-	description: string;
-	/** URL of the product image. Only png and jpg are supported */
-	image_url?: string;
-	/** Features of the product */
-	features?: FeatureEntity[];
-	/** The price of the product in cents. 1000 = $10.00 */
-	price: number;
-	/** Three-letter ISO currency code, in uppercase */
-	currency: string;
-	/** Billing method: recurring or one-time */
-	billing_type: "recurring" | "one-time";
-	/** Billing period */
-	billing_period:
-		| "every-month"
-		| "every-three-months"
-		| "every-six-months"
-		| "every-year"
-		| "once";
-	/** Status of the product */
-	status: "active" | "archived";
-	/** Tax calculation mode */
-	tax_mode: "inclusive" | "exclusive";
-	/** Tax category for the product */
-	tax_category: "saas" | "digital-goods-service" | "ebooks";
-	/** The product page URL for express checkout */
-	product_url?: string;
-	/** The URL to redirect after successful payment */
-	default_success_url?: string;
-	/** Creation date of the product */
-	created_at: Date;
-	/** Last updated date of the product */
-	updated_at: Date;
-}
-
-// ============================================================================
-// Transaction Entity
-// ============================================================================
-
-export interface TransactionEntity extends BaseEntity {
-	/** String representing the object's type */
-	object: "transaction";
-	/** The transaction amount in cents. 1000 = $10.00 */
-	amount: number;
-	/** The amount the customer paid in cents. 1000 = $10.00 */
-	amount_paid?: number;
-	/** The discount amount in cents. 1000 = $10.00 */
-	discount_amount?: number;
-	/** Three-letter ISO currency code, in uppercase */
-	currency: string;
-	/** The type of transaction: payment (one time) or invoice (subscription) */
-	type: "payment" | "invoice";
-	/** The ISO alpha-2 country code where tax is collected */
-	tax_country?: string;
-	/** The sale tax amount in cents. 1000 = $10.00 */
-	tax_amount?: number;
-	/** Status of the transaction */
-	status:
-		| "pending"
-		| "paid"
-		| "refunded"
-		| "partialRefund"
-		| "chargedBack"
-		| "uncollectible"
-		| "declined"
-		| "void";
-	/** The amount that has been refunded in cents. 1000 = $10.00 */
-	refunded_amount?: number | null;
-	/** The order ID associated with the transaction */
-	order?: string;
-	/** The subscription ID associated with the transaction */
-	subscription?: string;
-	/** The customer ID associated with the transaction */
-	customer?: string;
-	/** The description of the transaction */
-	description: string;
-	/** Start period for the invoice as timestamp */
-	period_start?: number;
-	/** End period for the invoice as timestamp */
-	period_end?: number;
-	/** Creation date of the transaction as timestamp */
-	created_at: number;
-}
-
-// ============================================================================
-// Order Entity
-// ============================================================================
-
-export interface OrderEntity extends BaseEntity {
-	/** String representing the object's type */
-	object: "order";
-	/** The customer ID who placed the order */
-	customer?: string;
-	/** The product ID associated with the order */
-	product: string;
-	/** The transaction ID of the order */
-	transaction?: string;
-	/** The discount ID of the order */
-	discount?: string;
-	/** The total amount of the order in cents. 1000 = $10.00 */
-	amount: number;
-	/** The subtotal of the order in cents. 1000 = $10.00 */
-	sub_total?: number;
-	/** The tax amount of the order in cents. 1000 = $10.00 */
-	tax_amount?: number;
-	/** The discount amount of the order in cents. 1000 = $10.00 */
-	discount_amount?: number;
-	/** The amount due for the order in cents. 1000 = $10.00 */
-	amount_due?: number;
-	/** The amount paid for the order in cents. 1000 = $10.00 */
-	amount_paid?: number;
-	/** Three-letter ISO currency code, in uppercase */
-	currency: string;
-	/** The amount in the foreign currency, if applicable */
-	fx_amount?: number;
-	/** Three-letter ISO code of the foreign currency, if applicable */
-	fx_currency?: string;
-	/** The exchange rate used for converting between currencies */
-	fx_rate?: number;
-	/** Current status of the order */
-	status: "pending" | "paid";
-	/** The type of order */
-	type: "recurring" | "onetime";
-	/** The affiliate ID associated with the order, if applicable */
-	affiliate?: string;
-	/** Creation date of the order */
-	created_at: Date;
-	/** Last updated date of the order */
-	updated_at: Date;
-}
-
-// ============================================================================
 // License Entities
 // ============================================================================
 
@@ -242,126 +98,6 @@ export interface LicenseInstanceEntity extends BaseEntity {
 	status: "active" | "deactivated";
 	/** The creation date of the license instance */
 	created_at: Date;
-}
-
-export interface LicenseEntity extends BaseEntity {
-	/** String representing the object's type */
-	object: "license";
-	/** The current status of the license key */
-	status: "inactive" | "active" | "expired" | "disabled";
-	/** The license key */
-	key: string;
-	/** The number of instances that this license key was activated */
-	activation: number;
-	/** The activation limit. Null if activations are unlimited */
-	activation_limit: number | null;
-	/** The date the license key expires. Null if no expiration */
-	expires_at: Date | null;
-	/** The creation date of the license key */
-	created_at: Date;
-	/** Associated license instance */
-	instance?: LicenseInstanceEntity | null;
-}
-
-export interface ProductFeatureEntity {
-	/** License key issued for the order */
-	license?: LicenseEntity;
-}
-
-// ============================================================================
-// Subscription Entities
-// ============================================================================
-
-export interface SubscriptionItemEntity extends BaseEntity {
-	/** String representing the object's type */
-	object: "subscription_item";
-	/** The product ID associated with the subscription item */
-	product_id: string;
-	/** The price ID associated with the subscription item */
-	price_id: string;
-	/** The number of units for the subscription item */
-	units?: number;
-	/** The creation date of the subscription item */
-	created_at: Date;
-	/** The last updated date of the subscription item */
-	updated_at: Date;
-}
-
-export type SubscriptionStatus =
-	| "active"
-	| "canceled"
-	| "unpaid"
-	| "paused"
-	| "trialing";
-
-export interface SubscriptionEntity extends BaseEntity {
-	/** String representing the object's type */
-	object: "subscription";
-	/** The product associated with the subscription */
-	product: ProductEntity | string;
-	/** The customer who owns the subscription */
-	customer: CustomerEntity | string;
-	/** Subscription items */
-	items?: SubscriptionItemEntity[];
-	/** The method used for collecting payments */
-	collection_method: "charge_automatically";
-	/** The current status of the subscription */
-	status: SubscriptionStatus;
-	/** The ID of the last paid transaction */
-	last_transaction_id?: string;
-	/** The last paid transaction */
-	last_transaction?: TransactionEntity;
-	/** The date of the last paid transaction */
-	last_transaction_date?: Date;
-	/** The date when the next subscription transaction will be charged */
-	next_transaction_date?: Date;
-	/** The start date of the current subscription period */
-	current_period_start_date: Date;
-	/** The end date of the current subscription period */
-	current_period_end_date: Date;
-	/** The date when the subscription was canceled, if applicable */
-	canceled_at: Date | null;
-	/** The date when the subscription was created */
-	created_at: Date;
-	/** The date when the subscription was last updated */
-	updated_at: Date;
-	/** Optional metadata */
-	metadata?: Metadata;
-}
-
-// ============================================================================
-// Checkout Entity
-// ============================================================================
-
-export type CheckoutStatus = "pending" | "processing" | "completed" | "expired";
-
-export interface CheckoutEntity extends BaseEntity {
-	/** String representing the object's type */
-	object: "checkout";
-	/** Status of the checkout */
-	status: CheckoutStatus;
-	/** Request ID to identify and track each checkout request */
-	request_id: string;
-	/** The product associated with the checkout session */
-	product: ProductEntity | string;
-	/** The number of units for the product */
-	units: number;
-	/** The order associated with the checkout session */
-	order?: OrderEntity;
-	/** The subscription associated with the checkout session */
-	subscription?: SubscriptionEntity | string;
-	/** The customer associated with the checkout session */
-	customer?: CustomerEntity | string;
-	/** Additional information collected during checkout */
-	custom_fields?: CustomField[];
-	/** The URL to complete the payment */
-	checkout_url?: string;
-	/** The URL to redirect after checkout is completed */
-	success_url?: string;
-	/** Features issued for the order */
-	feature?: ProductFeatureEntity;
-	/** Metadata for the checkout */
-	metadata?: Metadata;
 }
 
 // ============================================================================

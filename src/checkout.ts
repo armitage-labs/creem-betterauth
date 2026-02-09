@@ -22,6 +22,7 @@ export const CheckoutParams = z.object({
 	customField: z.array(z.record(z.string(), z.unknown())).max(3).optional(),
 	successUrl: z.string().optional(),
 	metadata: z.record(z.string(), z.unknown()).optional(),
+	redirect: z.boolean().optional().prefault(true).default(true),
 });
 
 export type CheckoutParams = z.infer<typeof CheckoutParams>;
@@ -126,7 +127,7 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
 
 			return ctx.json({
 				url: checkout.checkoutUrl,
-				redirect: true,
+				redirect: body.redirect,
 			});
 		} catch {
 			return ctx.json({ error: "Failed to create checkout" }, { status: 500 });

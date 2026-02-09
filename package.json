@@ -7,7 +7,7 @@
 	"types": "./dist/esm/index.d.ts",
 	"sideEffects": false,
 	"scripts": {
-		"build": "npm run build:cjs && npm run build:esm && npm run build:package-json",
+		"build": "npm run lint:fix && npm run build:cjs && npm run build:esm && npm run build:package-json",
 		"build:cjs": "tsc -p tsconfig.cjs.json",
 		"build:esm": "tsc -p tsconfig.esm.json",
 		"build:package-json": "node ./buildPackageJson.mjs",
