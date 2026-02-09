@@ -11,6 +11,46 @@ import type {
 } from "./webhook-types";
 
 // ============================================================================
+// Utils
+// ============================================================================
+
+export type CamelToSnakeCase<S extends string> =
+	S extends `${infer T}${infer U}`
+		? `${T extends Uncapitalize<T> ? T : `_${Lowercase<T>}`}${CamelToSnakeCase<U>}`
+		: S;
+
+export type SnakeCaseKeys<T> = {
+	[K in keyof T as CamelToSnakeCase<K & string>]: T[K];
+};
+
+// biome-ignore lint/complexity/noBannedTypes: use Function
+export type DeepSnakeCase<T> = T extends Date | RegExp | Function
+	? T // Leave built-in types alone
+	: T extends Array<infer U>
+		? Array<DeepSnakeCase<U>> // Recurse into Arrays
+		: T extends object
+			? SnakeCaseKeys<T>
+			: T; // Leave primitives (string, number, boolean) alone
+
+export type SnakeToCamelCase<S extends string> =
+	S extends `${infer T}_${infer U}`
+		? `${T}${Capitalize<SnakeToCamelCase<U>>}`
+		: S;
+
+export type CamelCaseKeys<T> = {
+	[K in keyof T as SnakeToCamelCase<K & string>]: T[K];
+};
+
+// biome-ignore lint/complexity/noBannedTypes: use Function
+export type DeepCamelCase<T> = T extends Date | RegExp | Function
+	? T // Leave built-in types alone
+	: T extends Array<infer U>
+		? Array<DeepCamelCase<U>> // Recurse into Arrays
+		: T extends object
+			? CamelCaseKeys<T>
+			: T; // Leave primitives (string, number, boolean) alone
+
+// ============================================================================
 // Flattened Callback Types (for better developer experience)
 // ============================================================================
 

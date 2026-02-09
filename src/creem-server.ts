@@ -401,7 +401,7 @@ export async function retrieveSubscription(
 
 	const subscription = await creem.subscriptions.get(subscriptionId, {});
 
-	return subscription as unknown as SubscriptionData;
+	return subscription;
 }
 
 /**
@@ -460,7 +460,7 @@ export async function searchTransactions(
 		{},
 	);
 
-	return response as unknown as SearchTransactionsResponse;
+	return response;
 }
 
 /**

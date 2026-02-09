@@ -1,3 +1,5 @@
+import type { Transactions } from "creem/sdk/transactions";
+
 /**
  * Parameters for searching Creem transactions.
  *
@@ -129,24 +131,6 @@ export interface TransactionData {
 /**
  * Response from searching transactions.
  */
-export interface SearchTransactionsResponse {
-	/**
-	 * Array of transaction objects
-	 */
-	transactions: TransactionData[];
-
-	/**
-	 * Total number of transactions matching the query
-	 */
-	total?: number;
-
-	/**
-	 * Current page number
-	 */
-	page?: number;
-
-	/**
-	 * Additional pagination or response data from Creem API
-	 */
-	[key: string]: unknown;
-}
+export type SearchTransactionsResponse = Awaited<
+	ReturnType<Transactions["search"]>
+>;

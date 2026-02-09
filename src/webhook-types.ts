@@ -21,32 +21,25 @@ import type {
 	Text as TextFromSdk,
 	TransactionEntity as TransactionEntityFromSdk,
 } from "creem/models/components";
+import type { DeepSnakeCase } from "./types";
 
-type CamelToSnakeCase<S extends string> = S extends `${infer T}${infer U}`
-	? `${T extends Uncapitalize<T> ? T : `_${Lowercase<T>}`}${CamelToSnakeCase<U>}`
-	: S;
-
-type SnakeCaseKeys<T> = {
-	[K in keyof T as CamelToSnakeCase<K & string>]: T[K];
-};
-
-type Checkbox = SnakeCaseKeys<CheckboxFromSdk>;
-type CheckoutEntity = SnakeCaseKeys<CheckoutEntityFromSdk>;
-type CheckoutStatus = SnakeCaseKeys<CheckoutStatusFromSdk>;
-type CustomerEntity = SnakeCaseKeys<CustomerEntityFromSdk>;
-type CustomField = SnakeCaseKeys<CustomFieldFromSdk>;
-type FeatureEntity = SnakeCaseKeys<FeatureEntityFromSdk>;
-type LicenseEntity = SnakeCaseKeys<LicenseEntityFromSdk>;
-type OrderEntity = SnakeCaseKeys<OrderEntityFromSdk>;
-type ProductEntity = SnakeCaseKeys<ProductEntityFromSdk>;
-type ProductFeatureEntity = SnakeCaseKeys<ProductFeatureEntityFromSdk>;
-type SubscriptionEntity = SnakeCaseKeys<SubscriptionEntityFromSdk> & {
+type Checkbox = DeepSnakeCase<CheckboxFromSdk>;
+type CheckoutEntity = DeepSnakeCase<CheckoutEntityFromSdk>;
+type CheckoutStatus = DeepSnakeCase<CheckoutStatusFromSdk>;
+type CustomerEntity = DeepSnakeCase<CustomerEntityFromSdk>;
+type CustomField = DeepSnakeCase<CustomFieldFromSdk>;
+type FeatureEntity = DeepSnakeCase<FeatureEntityFromSdk>;
+type LicenseEntity = DeepSnakeCase<LicenseEntityFromSdk>;
+type OrderEntity = DeepSnakeCase<OrderEntityFromSdk>;
+type ProductEntity = DeepSnakeCase<ProductEntityFromSdk>;
+type ProductFeatureEntity = DeepSnakeCase<ProductFeatureEntityFromSdk>;
+type SubscriptionEntity = DeepSnakeCase<SubscriptionEntityFromSdk> & {
 	metadata?: Metadata;
 };
-type SubscriptionItemEntity = SnakeCaseKeys<SubscriptionItemEntityFromSdk>;
-type SubscriptionStatus = SnakeCaseKeys<SubscriptionStatusFromSdk>;
-type Text = SnakeCaseKeys<TextFromSdk>;
-type TransactionEntity = SnakeCaseKeys<TransactionEntityFromSdk>;
+type SubscriptionItemEntity = DeepSnakeCase<SubscriptionItemEntityFromSdk>;
+type SubscriptionStatus = DeepSnakeCase<SubscriptionStatusFromSdk>;
+type Text = DeepSnakeCase<TextFromSdk>;
+type TransactionEntity = DeepSnakeCase<TransactionEntityFromSdk>;
 
 export type {
 	Checkbox,
