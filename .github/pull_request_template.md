@@ -54,7 +54,7 @@ Closes #(issue number)
 - [ ] I have updated the README.md if needed
 - [ ] I have added examples if needed
 - [ ] The build passes (`npm run build`)
-- [ ] Type checking passes (`npm run typecheck`)
+- [ ] Type checking and linting passes (`npm run lint:fix`)
 
 ## 📚 Documentation Changes
 

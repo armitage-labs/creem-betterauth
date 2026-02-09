@@ -39,14 +39,14 @@ By participating in this project, you agree to maintain a respectful and inclusi
    npm install
    ```
 
-4. Build the project:
+4. Run type checking and linting:
    ```bash
-   npm run build
+   npm run lint:fix
    ```
 
-5. Run type checking:
+5. Build the project:
    ```bash
-   npm run typecheck
+   npm run build
    ```
 
 ## 💻 Development Workflow
@@ -76,8 +76,8 @@ creem-betterauth/
 # Build the project
 npm run build
 
-# Type check without building
-npm run typecheck
+# Type check and linting without building
+npm run lint:fix
 
 # Watch mode (if implemented)
 npm run dev
