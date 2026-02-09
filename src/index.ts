@@ -103,7 +103,7 @@ export type {
  * });
  * ```
  */
-export const creem = (options: CreemOptions) => {
+export const creem = <T extends CreemOptions>(options: T) => {
 	const serverURL = options.testMode
 		? "https://test-api.creem.io"
 		: "https://api.creem.io";

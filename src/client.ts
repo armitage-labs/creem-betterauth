@@ -18,7 +18,9 @@ import type { creem } from "./index.js";
  * import { creemClient } from "@creem_io/better-auth/client";
  *
  * export const authClient = createAuthClient({
- *   plugins: [creemClient()]
+ *   plugins: [
+ * 		creemClient({ persistSubscriptions: true // Optional, defaults to true})
+ *  ]
  * });
  *
  * // Usage in components - hover over createCheckout to see clean parameter types!
@@ -29,10 +31,21 @@ import type { creem } from "./index.js";
  * });
  * ```
  */
-export const creemClient = () => {
+export const creemClient = <
+	T extends { persistSubscriptions?: boolean } = {
+		persistSubscriptions?: boolean;
+	},
+>(
+	_options: T = {} as T,
+) => {
 	return {
 		id: "creem",
-		$InferServerPlugin: {} as ReturnType<typeof creem>,
+		$InferServerPlugin: {} as ReturnType<
+			typeof creem<{
+				apiKey: string;
+				persistSubscriptions: T["persistSubscriptions"];
+			}>
+		>,
 		pathMethods: {
 			"/creem/create-portal": "POST",
 		},
