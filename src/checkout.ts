@@ -1,6 +1,7 @@
 import { type GenericEndpointContext, logger } from "better-auth";
 import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
 import type { Creem } from "creem";
+import type { CustomerRequestEntity } from "creem/models/components";
 import { z } from "zod";
 import type {
 	CreateCheckoutInput,
@@ -93,20 +94,29 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
 				}
 			}
 
+			const id = session?.user?.creemCustomerId;
+			const email = body.customer?.email || session?.user?.email;
+
+			let customer: CustomerRequestEntity | undefined;
+
+			if (id) {
+				customer ??= {};
+
+				customer.id = id;
+			}
+
+			if (email) {
+				customer ??= {};
+
+				customer.email = email;
+			}
+
 			const checkout = await creem.checkouts.create({
 				productId: body.productId,
 				requestId: body.requestId,
 				units: body.units,
 				discountCode: body.discountCode,
-				customer: body.customer?.email
-					? {
-							email: body.customer.email,
-						}
-					: session?.user?.email
-						? {
-								email: session.user.email,
-							}
-						: undefined,
+				customer,
 				//   customField: body.customField, TODO: Implement proper customField handling
 				successUrl: resolveSuccessUrl(
 					body.successUrl || options.defaultSuccessUrl,

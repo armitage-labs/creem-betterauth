@@ -58,6 +58,11 @@ const createSearchTransactionsHandler = (
 					{ error: "User must have a Creem customer ID" },
 					{ status: 400 },
 				);
+			} else if (customerId !== session.user.creemCustomerId) {
+				return ctx.json(
+					{ error: "Cannot search transactions for a different customer ID" },
+					{ status: 403 },
+				);
 			}
 
 			const transactions = await creem.transactions.search(

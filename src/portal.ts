@@ -45,6 +45,18 @@ const createPortalHandler = (serverURL: string, options: CreemOptions) => {
 				);
 			}
 
+			const customer_id = body.customerId || session.user.creemCustomerId;
+
+			if (customer_id !== session.user.creemCustomerId) {
+				return ctx.json(
+					{
+						error:
+							"Provided customerId does not match the customer's ID in the session. Please provide a valid customerId or omit it to use the default.",
+					},
+					{ status: 403 },
+				);
+			}
+
 			const response = await fetch(`${serverURL}/v1/customers/billing`, {
 				method: "POST",
 				headers: {
@@ -52,7 +64,7 @@ const createPortalHandler = (serverURL: string, options: CreemOptions) => {
 					"x-api-key": options.apiKey,
 				},
 				body: JSON.stringify({
-					customer_id: body.customerId || session.user.creemCustomerId,
+					customer_id,
 				}),
 			});
 

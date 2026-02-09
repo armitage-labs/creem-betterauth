@@ -105,6 +105,18 @@ const createRetrieveSubscriptionHandler = (
 
 			const subscription = await creem.subscriptions.get(subscriptionId, {});
 
+			const subscriptionCustomerId =
+				typeof subscription.customer === "string"
+					? subscription.customer
+					: subscription.customer.id;
+
+			if (subscriptionCustomerId !== session.user.creemCustomerId) {
+				return ctx.json(
+					{ error: "Subscription does not belong to the authenticated user" },
+					{ status: 403 },
+				);
+			}
+
 			return ctx.json(subscription);
 		} catch {
 			return ctx.json(
