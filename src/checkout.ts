@@ -99,13 +99,12 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
 
 			let customer: CustomerRequestEntity | undefined;
 
+			// If we have a customer ID, use that. Otherwise, if we have an email, use that. It breaks if we pass both, so we have to choose an order of precedence. Customer ID is more reliable, so we prioritize that if available.
 			if (id) {
 				customer ??= {};
 
 				customer.id = id;
-			}
-
-			if (email) {
+			} else if (!customer?.id && email) {
 				customer ??= {};
 
 				customer.email = email;
@@ -139,7 +138,8 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
 				url: checkout.checkoutUrl,
 				redirect: body.redirect,
 			});
-		} catch {
+		} catch (error) {
+			console.error("Error creating Creem checkout:", error);
 			return ctx.json({ error: "Failed to create checkout" }, { status: 500 });
 		}
 	};
