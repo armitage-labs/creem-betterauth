@@ -279,29 +279,14 @@ export async function createPortal(
 		);
 	}
 
-	const serverURL = config.testMode
-		? "https://test-api.creem.io"
-		: "https://api.creem.io";
+	const creem = createCreemClient(config);
 
-	const response = await fetch(`${serverURL}/v1/customers/billing`, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-			"x-api-key": config.apiKey,
-		},
-		body: JSON.stringify({
-			customer_id: customerId,
-		}),
+	const { customerPortalLink } = await creem.customers.generateBillingLinks({
+		customerId,
 	});
 
-	if (!response.ok) {
-		throw new Error(`Creem API error: ${response.statusText}`);
-	}
-
-	const portal = (await response.json()) as { customer_portal_link: string };
-
 	return {
-		url: portal.customer_portal_link,
+		url: customerPortalLink,
 		redirect: true,
 	};
 }

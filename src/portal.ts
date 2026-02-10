@@ -1,5 +1,6 @@
 import type { GenericEndpointContext } from "better-auth";
 import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
+import type { Creem } from "creem";
 import { z } from "zod";
 import type {
 	CreatePortalInput,
@@ -17,7 +18,7 @@ export type PortalParams = z.infer<typeof PortalParams>;
 // Re-export types for convenience
 export type { CreatePortalInput, CreatePortalResponse };
 
-const createPortalHandler = (serverURL: string, options: CreemOptions) => {
+const createPortalHandler = (creem: Creem, options: CreemOptions) => {
 	return async (ctx: GenericEndpointContext) => {
 		const body = (ctx.body || {}) as PortalParams;
 
@@ -45,9 +46,9 @@ const createPortalHandler = (serverURL: string, options: CreemOptions) => {
 				);
 			}
 
-			const customer_id = body.customerId || session.user.creemCustomerId;
+			const customerId = body.customerId || session.user.creemCustomerId;
 
-			if (customer_id !== session.user.creemCustomerId) {
+			if (customerId !== session.user.creemCustomerId) {
 				return ctx.json(
 					{
 						error:
@@ -57,27 +58,14 @@ const createPortalHandler = (serverURL: string, options: CreemOptions) => {
 				);
 			}
 
-			const response = await fetch(`${serverURL}/v1/customers/billing`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					"x-api-key": options.apiKey,
+			const { customerPortalLink } = await creem.customers.generateBillingLinks(
+				{
+					customerId,
 				},
-				body: JSON.stringify({
-					customer_id,
-				}),
-			});
-
-			if (!response.ok) {
-				throw new Error(`Creem API error: ${response.statusText}`);
-			}
-
-			const portal = (await response.json()) as {
-				customer_portal_link: string;
-			};
+			);
 
 			return ctx.json({
-				url: portal.customer_portal_link,
+				url: customerPortalLink,
 				redirect: body.redirect,
 			});
 		} catch {
@@ -92,7 +80,7 @@ const createPortalHandler = (serverURL: string, options: CreemOptions) => {
  * This endpoint generates a Creem customer portal URL where users can
  * manage their subscriptions, view invoices, and update payment methods.
  *
- * @param serverURL - The Creem API server URL
+ * @param creem - The Creem client instance
  * @param options - Plugin configuration options
  * @returns BetterAuth endpoint configuration
  *
@@ -114,16 +102,13 @@ const createPortalHandler = (serverURL: string, options: CreemOptions) => {
  * }
  * ```
  */
-export const createPortalEndpoint = (
-	serverURL: string,
-	options: CreemOptions,
-) => {
+export const createPortalEndpoint = (creem: Creem, options: CreemOptions) => {
 	return createAuthEndpoint(
 		"/creem/create-portal",
 		{
 			method: "POST",
 			body: PortalParams,
 		},
-		createPortalHandler(serverURL, options),
+		createPortalHandler(creem, options),
 	);
 };

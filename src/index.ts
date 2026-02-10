@@ -123,7 +123,7 @@ export const creem = <T extends CreemOptions>(options: T) => {
 		id: "creem",
 		endpoints: {
 			createCheckout: createCheckoutEndpoint(creem, options),
-			createPortal: createPortalEndpoint(serverURL, options),
+			createPortal: createPortalEndpoint(creem, options),
 			cancelSubscription: createCancelSubscriptionEndpoint(creem, options),
 			retrieveSubscription: createRetrieveSubscriptionEndpoint(creem, options),
 			searchTransactions: createSearchTransactionsEndpoint(creem, options),
