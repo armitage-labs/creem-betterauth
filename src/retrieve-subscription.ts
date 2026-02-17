@@ -100,10 +100,7 @@ const createRetrieveSubscriptionHandler = (
         );
       }
 
-      const subscription = await creem.retrieveSubscription({
-        xApiKey: options.apiKey,
-        subscriptionId: subscriptionId,
-      });
+      const subscription = await creem.subscriptions.get(subscriptionId);
 
       return ctx.json(subscription);
     } catch (error) {

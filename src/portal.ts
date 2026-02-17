@@ -1,5 +1,6 @@
 import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
 import type { GenericEndpointContext } from "better-auth";
+import { Creem } from "creem";
 import { z } from "zod";
 import type { CreemOptions } from "./types.js";
 import type {
@@ -16,7 +17,7 @@ export type PortalParams = z.infer<typeof PortalParams>;
 // Re-export types for convenience
 export type { CreatePortalInput, CreatePortalResponse };
 
-const createPortalHandler = (serverURL: string, options: CreemOptions) => {
+const createPortalHandler = (creem: Creem, options: CreemOptions) => {
   return async (ctx: GenericEndpointContext) => {
     const body = (ctx.body || {}) as PortalParams;
 
@@ -41,27 +42,12 @@ const createPortalHandler = (serverURL: string, options: CreemOptions) => {
         );
       }
 
-      const response = await fetch(`${serverURL}/v1/customers/billing`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": options.apiKey,
-        },
-        body: JSON.stringify({
-          customer_id: body.customerId || session.user.creemCustomerId,
-        }),
+      const portal = await creem.customers.generateBillingLinks({
+        customerId: body.customerId || session.user.creemCustomerId,
       });
 
-      if (!response.ok) {
-        throw new Error(`Creem API error: ${response.statusText}`);
-      }
-
-      const portal = (await response.json()) as {
-        customer_portal_link: string;
-      };
-
       return ctx.json({
-        url: portal.customer_portal_link,
+        url: portal.customerPortalLink,
         redirect: true,
       });
     } catch (error) {
@@ -99,7 +85,7 @@ const createPortalHandler = (serverURL: string, options: CreemOptions) => {
  * ```
  */
 export const createPortalEndpoint = (
-  serverURL: string,
+  creem: Creem,
   options: CreemOptions,
 ) => {
   return createAuthEndpoint(
@@ -108,6 +94,6 @@ export const createPortalEndpoint = (
       method: "POST",
       body: PortalParams,
     },
-    createPortalHandler(serverURL, options),
+    createPortalHandler(creem, options),
   );
 };

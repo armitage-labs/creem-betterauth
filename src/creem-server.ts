@@ -36,10 +36,7 @@ export interface CreemServerConfig {
  * });
  *
  * // Use directly in Server Actions or API routes
- * const subscription = await creem.retrieveSubscription({
- *   xApiKey: process.env.CREEM_API_KEY!,
- *   subscriptionId: "sub_123"
- * });
+ * const subscription = await creem.subscriptions.get("sub_123");
  * ```
  */
 export function createCreemClient(config: CreemServerConfig): Creem {
@@ -47,7 +44,7 @@ export function createCreemClient(config: CreemServerConfig): Creem {
     ? "https://test-api.creem.io"
     : "https://api.creem.io";
 
-  return new Creem({ serverURL });
+  return new Creem({ apiKey: config.apiKey, serverURL });
 }
 
 /**
@@ -215,20 +212,17 @@ export async function createCheckout(
 
   const creem = createCreemClient(config);
 
-  const checkout = await creem.createCheckout({
-    xApiKey: config.apiKey,
-    createCheckoutRequest: {
-      productId: input.productId,
-      requestId: input.requestId,
-      units: input.units,
-      discountCode: input.discountCode,
-      customer: input.customer,
-      successUrl: input.successUrl,
-      metadata: {
-        ...(input.metadata || {}),
-        // Trial abuse prevention: signal to Creem that this user has already had a trial
-        ...(input.skipTrial && { skipTrial: true }),
-      },
+  const checkout = await creem.checkouts.create({
+    productId: input.productId,
+    requestId: input.requestId,
+    units: input.units,
+    discountCode: input.discountCode,
+    customer: input.customer,
+    successUrl: input.successUrl,
+    metadata: {
+      ...(input.metadata || {}),
+      // Trial abuse prevention: signal to Creem that this user has already had a trial
+      ...(input.skipTrial && { skipTrial: true }),
     },
   });
 
@@ -280,29 +274,14 @@ export async function createPortal(
     );
   }
 
-  const serverURL = config.testMode
-    ? "https://test-api.creem.io"
-    : "https://api.creem.io";
+  const creem = createCreemClient(config);
 
-  const response = await fetch(`${serverURL}/v1/customers/billing`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": config.apiKey,
-    },
-    body: JSON.stringify({
-      customer_id: customerId,
-    }),
+  const portal = await creem.customers.generateBillingLinks({
+    customerId,
   });
 
-  if (!response.ok) {
-    throw new Error(`Creem API error: ${response.statusText}`);
-  }
-
-  const portal = (await response.json()) as { customer_portal_link: string };
-
   return {
-    url: portal.customer_portal_link,
+    url: portal.customerPortalLink,
     redirect: true,
   };
 }
@@ -347,10 +326,7 @@ export async function cancelSubscription(
 
   const creem = createCreemClient(config);
 
-  await creem.cancelSubscription({
-    xApiKey: config.apiKey,
-    id: subscriptionId,
-  });
+  await creem.subscriptions.cancel(subscriptionId, {});
 
   return {
     success: true,
@@ -401,10 +377,7 @@ export async function retrieveSubscription(
 
   const creem = createCreemClient(config);
 
-  const subscription = await creem.retrieveSubscription({
-    xApiKey: config.apiKey,
-    subscriptionId: subscriptionId,
-  });
+  const subscription = await creem.subscriptions.get(subscriptionId);
 
   return subscription as unknown as SubscriptionData;
 }
@@ -456,14 +429,13 @@ export async function searchTransactions(
 
   const creem = createCreemClient(config);
 
-  const response = await creem.searchTransactions({
-    xApiKey: config.apiKey,
-    customerId: filters?.customerId,
-    productId: filters?.productId,
-    orderId: filters?.orderId,
-    pageNumber: filters?.pageNumber,
-    pageSize: filters?.pageSize,
-  });
+  const response = await creem.transactions.search(
+    filters?.customerId,
+    filters?.orderId,
+    filters?.productId,
+    filters?.pageNumber,
+    filters?.pageSize,
+  );
 
   return response as unknown as SearchTransactionsResponse;
 }

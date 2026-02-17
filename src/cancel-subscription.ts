@@ -104,10 +104,7 @@ const createCancelSubscriptionHandler = (
         );
       }
 
-      await creem.cancelSubscription({
-        xApiKey: options.apiKey,
-        id: subscriptionId,
-      });
+      await creem.subscriptions.cancel(subscriptionId, {});
 
       return ctx.json({
         success: true,
