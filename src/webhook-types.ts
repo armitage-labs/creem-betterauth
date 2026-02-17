@@ -290,6 +290,7 @@ export interface SubscriptionItemEntity extends BaseEntity {
 export type SubscriptionStatus =
   | "active"
   | "canceled"
+  | "scheduled_cancel"
   | "unpaid"
   | "paused"
   | "trialing";
@@ -432,6 +433,7 @@ export type WebhookEventType =
   | "subscription.active"
   | "subscription.trialing"
   | "subscription.canceled"
+  | "subscription.scheduled_cancel"
   | "subscription.paid"
   | "subscription.expired"
   | "subscription.unpaid"
@@ -526,6 +528,16 @@ export interface SubscriptionCanceledEvent {
 }
 
 /**
+ * Subscription scheduled cancel event - contains a SubscriptionEntity
+ */
+export interface SubscriptionScheduledCancelEvent {
+  eventType: "subscription.scheduled_cancel";
+  id: string;
+  created_at: number;
+  object: SubscriptionEntity;
+}
+
+/**
  * Subscription paid event - contains a SubscriptionEntity
  */
 export interface SubscriptionPaidEvent {
@@ -596,6 +608,7 @@ export type WebhookEvent =
   | SubscriptionActiveEvent
   | SubscriptionTrialingEvent
   | SubscriptionCanceledEvent
+  | SubscriptionScheduledCancelEvent
   | SubscriptionPaidEvent
   | SubscriptionExpiredEvent
   | SubscriptionUnpaidEvent
@@ -742,6 +755,17 @@ export interface NormalizedSubscriptionCanceledEvent {
 }
 
 /**
+ * Subscription scheduled cancel event with normalized/expanded objects.
+ * Product and customer are always full objects.
+ */
+export interface NormalizedSubscriptionScheduledCancelEvent {
+  eventType: "subscription.scheduled_cancel";
+  id: string;
+  created_at: number;
+  object: NormalizedSubscriptionEntity;
+}
+
+/**
  * Subscription paid event with normalized/expanded objects.
  * Product and customer are always full objects.
  */
@@ -821,6 +845,7 @@ export type NormalizedWebhookEvent =
   | NormalizedSubscriptionActiveEvent
   | NormalizedSubscriptionTrialingEvent
   | NormalizedSubscriptionCanceledEvent
+  | NormalizedSubscriptionScheduledCancelEvent
   | NormalizedSubscriptionPaidEvent
   | NormalizedSubscriptionExpiredEvent
   | NormalizedSubscriptionUnpaidEvent
