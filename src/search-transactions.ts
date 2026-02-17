@@ -57,14 +57,13 @@ const createSearchTransactionsHandler = (
         );
       }
 
-      const transactions = await creem.searchTransactions({
-        xApiKey: options.apiKey,
+      const transactions = await creem.transactions.search(
         customerId,
-        pageNumber: body.pageNumber,
-        pageSize: body.pageSize,
-        productId: body.productId,
-        orderId: body.orderId,
-      });
+        body.orderId,
+        body.productId,
+        body.pageNumber,
+        body.pageSize,
+      );
 
       return ctx.json(transactions);
     } catch (error) {

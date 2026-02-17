@@ -89,38 +89,35 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
         }
       }
 
-      const checkout = await creem.createCheckout({
-        xApiKey: options.apiKey,
-        createCheckoutRequest: {
-          productId: body.productId,
-          requestId: body.requestId,
-          units: body.units,
-          discountCode: body.discountCode,
-          customer: body.customer?.email
+      const checkout = await creem.checkouts.create({
+        productId: body.productId,
+        requestId: body.requestId,
+        units: body.units,
+        discountCode: body.discountCode,
+        customer: body.customer?.email
+          ? {
+              email: body.customer.email,
+            }
+          : session?.user?.email
             ? {
-                email: body.customer.email,
+                email: session.user.email,
               }
-            : session?.user?.email
-              ? {
-                  email: session.user.email,
-                }
-              : undefined,
-          //   customField: body.customField, TODO: Implement proper customField handling
-          successUrl: resolveSuccessUrl(
-            body.successUrl || options.defaultSuccessUrl,
-            ctx,
-          ),
-          metadata: {
-            ...(body.metadata || {}),
-            ...(session?.user?.id && {
-              referenceId: session.user.id,
-            }),
-            // Trial abuse prevention: signal to Creem that this user has already had a trial
-            // Creem will use this to skip the trial period for returning users
-            ...(userHadTrial && {
-              skipTrial: true,
-            }),
-          },
+            : undefined,
+        //   customField: body.customField, TODO: Implement proper customField handling
+        successUrl: resolveSuccessUrl(
+          body.successUrl || options.defaultSuccessUrl,
+          ctx,
+        ),
+        metadata: {
+          ...(body.metadata || {}),
+          ...(session?.user?.id && {
+            referenceId: session.user.id,
+          }),
+          // Trial abuse prevention: signal to Creem that this user has already had a trial
+          // Creem will use this to skip the trial period for returning users
+          ...(userHadTrial && {
+            skipTrial: true,
+          }),
         },
       });
 

@@ -115,6 +115,7 @@ export const creem = (options: CreemOptions) => {
     : "https://api.creem.io";
 
   const creem = new Creem({
+    apiKey: options.apiKey,
     serverURL,
   });
 
@@ -128,7 +129,7 @@ export const creem = (options: CreemOptions) => {
     id: "creem",
     endpoints: {
       createCheckout: createCheckoutEndpoint(creem, options),
-      createPortal: createPortalEndpoint(serverURL, options),
+      createPortal: createPortalEndpoint(creem, options),
       cancelSubscription: createCancelSubscriptionEndpoint(creem, options),
       retrieveSubscription: createRetrieveSubscriptionEndpoint(creem, options),
       searchTransactions: createSearchTransactionsEndpoint(creem, options),
