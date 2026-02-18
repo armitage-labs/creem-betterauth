@@ -157,7 +157,7 @@ const createRetrieveSubscriptionHandler = (
  * if (data) {
  *   console.log(`Status: ${data.status}`);
  *   console.log(`Product: ${data.product.name}`);
- *   console.log(`Next billing: ${new Date(data.next_billing_date * 1000)}`);
+ *   console.log(`Next billing: ${new Date(data.next_transaction_date)}`);
  * }
  * ```
  *
@@ -171,7 +171,7 @@ const createRetrieveSubscriptionHandler = (
  * if (data) {
  *   console.log(`Status: ${data.status}`);
  *   console.log(`Product: ${data.product.name}`);
- *   console.log(`Next billing: ${new Date(data.next_billing_date * 1000)}`);
+ *   console.log(`Next billing: ${new Date(data.next_transaction_date)}`);
  * }
  * ```
  */

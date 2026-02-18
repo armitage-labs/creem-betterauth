@@ -107,8 +107,8 @@ const createSearchTransactionsHandler = (
  *   pageSize: 50
  * });
  *
- * if (data?.transactions) {
- *   data.transactions.forEach(tx => {
+ * if (data?.items) {
+ *   data.items.forEach(tx => {
  *     console.log(`${tx.type}: ${tx.amount} ${tx.currency}`);
  *   });
  * }
