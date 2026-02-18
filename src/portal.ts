@@ -42,8 +42,22 @@ const createPortalHandler = (creem: Creem, options: CreemOptions) => {
         );
       }
 
+      const customerId = body.customerId || session.user.creemCustomerId;
+
+      // If caller provided a customerId, ensure it matches the session's
+      // creemCustomerId to prevent cross-user portal access.
+      if (body.customerId && customerId !== session.user.creemCustomerId) {
+        return ctx.json(
+          {
+            error:
+              "Provided customerId does not match the customer's ID in the session. Please provide a valid customerId or omit it to use the default.",
+          },
+          { status: 403 },
+        );
+      }
+
       const portal = await creem.customers.generateBillingLinks({
-        customerId: body.customerId || session.user.creemCustomerId,
+        customerId,
       });
 
       return ctx.json({

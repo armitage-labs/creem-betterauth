@@ -29,13 +29,14 @@ import type { creem } from "./index.js";
  * });
  * ```
  */
-export const creemClient = () => {
+export const creemClient = <T extends { persistSubscriptions?: boolean } = { persistSubscriptions?: boolean }>(_options: T = {} as T,) => {
   return {
     id: "creem",
-    $InferServerPlugin: {} as ReturnType<typeof creem>,
-    pathMethods: {
-      "/creem/create-portal": "POST",
-    },
+    $InferServerPlugin: {} as ReturnType<typeof creem<{
+      apiKey: string;
+      persistSubscriptions: T["persistSubscriptions"];
+    }>>,
+    pathMethods: { "/creem/create-portal": "POST" },
   } satisfies BetterAuthClientPlugin;
 };
 
