@@ -202,6 +202,7 @@ export async function createCheckout(
      * @since 1.1.0
      */
     skipTrial?: boolean;
+		redirect?: boolean;
   }
 ): Promise<CreateCheckoutResponse> {
   if (!config.apiKey) {
@@ -228,7 +229,7 @@ export async function createCheckout(
 
   return {
     url: checkout.checkoutUrl || "",
-    redirect: true,
+    redirect: !!input.redirect,
   };
 }
 
@@ -266,7 +267,10 @@ export async function createCheckout(
  */
 export async function createPortal(
   config: CreemServerConfig,
-  customerId: string
+  input: {
+		customerId: string
+		redirect?: boolean;
+	}
 ): Promise<CreatePortalResponse> {
   if (!config.apiKey) {
     throw new Error(
@@ -277,12 +281,12 @@ export async function createPortal(
   const creem = createCreemClient(config);
 
   const portal = await creem.customers.generateBillingLinks({
-    customerId,
+    customerId: input.customerId,
   });
 
   return {
     url: portal.customerPortalLink,
-    redirect: true,
+    redirect: !!input.redirect,
   };
 }
 
