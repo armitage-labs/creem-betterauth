@@ -6,6 +6,7 @@ import {
   NormalizedDisputeEntity,
   NormalizedSubscriptionEntity,
 } from "./webhook-types";
+import { GenericEndpointContext } from "better-auth";
 
 // ============================================================================
 // Flattened Callback Types (for better developer experience)
@@ -141,19 +142,28 @@ export interface CreemOptions {
    *   console.log(`Checkout completed: ${customer?.email} purchased ${product.name}`);
    * }
    */
-  onCheckoutCompleted?: (data: FlatCheckoutCompleted) => void;
+  onCheckoutCompleted?: (
+    ctx: GenericEndpointContext,
+    data: FlatCheckoutCompleted
+  ) => void;
 
   /**
    * Called when a refund is created.
    * All properties are flattened for easy destructuring.
    */
-  onRefundCreated?: (data: FlatRefundCreated) => void;
+  onRefundCreated?: (
+    ctx: GenericEndpointContext,
+    data: FlatRefundCreated
+  ) => void;
 
   /**
    * Called when a dispute is created.
    * All properties are flattened for easy destructuring.
    */
-  onDisputeCreated?: (data: FlatDisputeCreated) => void;
+  onDisputeCreated?: (
+    ctx: GenericEndpointContext,
+    data: FlatDisputeCreated
+  ) => void;
 
   /**
    * Called when a subscription becomes active.
@@ -166,6 +176,7 @@ export interface CreemOptions {
    * }
    */
   onSubscriptionActive?: (
+    ctx: GenericEndpointContext,
     data: FlatSubscriptionEvent<"subscription.active">
   ) => void;
 
@@ -174,6 +185,7 @@ export interface CreemOptions {
    * All properties are flattened for easy destructuring.
    */
   onSubscriptionTrialing?: (
+    ctx: GenericEndpointContext,
     data: FlatSubscriptionEvent<"subscription.trialing">
   ) => void;
 
@@ -182,6 +194,7 @@ export interface CreemOptions {
    * All properties are flattened for easy destructuring.
    */
   onSubscriptionCanceled?: (
+    ctx: GenericEndpointContext,
     data: FlatSubscriptionEvent<"subscription.canceled">
   ) => void;
 
@@ -190,6 +203,7 @@ export interface CreemOptions {
    * All properties are flattened for easy destructuring.
    */
   onSubscriptionPaid?: (
+    ctx: GenericEndpointContext,
     data: FlatSubscriptionEvent<"subscription.paid">
   ) => void;
 
@@ -198,6 +212,7 @@ export interface CreemOptions {
    * All properties are flattened for easy destructuring.
    */
   onSubscriptionExpired?: (
+    ctx: GenericEndpointContext,
     data: FlatSubscriptionEvent<"subscription.expired">
   ) => void;
 
@@ -206,6 +221,7 @@ export interface CreemOptions {
    * All properties are flattened for easy destructuring.
    */
   onSubscriptionUnpaid?: (
+    ctx: GenericEndpointContext,
     data: FlatSubscriptionEvent<"subscription.unpaid">
   ) => void;
 
@@ -214,6 +230,7 @@ export interface CreemOptions {
    * All properties are flattened for easy destructuring.
    */
   onSubscriptionUpdate?: (
+    ctx: GenericEndpointContext,
     data: FlatSubscriptionEvent<"subscription.update">
   ) => void;
 
@@ -222,6 +239,7 @@ export interface CreemOptions {
    * All properties are flattened for easy destructuring.
    */
   onSubscriptionPastDue?: (
+    ctx: GenericEndpointContext,
     data: FlatSubscriptionEvent<"subscription.past_due">
   ) => void;
 
@@ -230,6 +248,7 @@ export interface CreemOptions {
    * All properties are flattened for easy destructuring.
    */
   onSubscriptionPaused?: (
+    ctx: GenericEndpointContext,
     data: FlatSubscriptionEvent<"subscription.paused">
   ) => void;
 
@@ -250,7 +269,10 @@ export interface CreemOptions {
    *   // Your database logic here
    * }
    */
-  onGrantAccess?: (context: GrantAccessContext) => void | Promise<void>;
+  onGrantAccess?: (
+    ctx: GenericEndpointContext,
+    data: GrantAccessContext
+  ) => void | Promise<void>;
 
   /**
    * Called when a user's access should be revoked.
@@ -269,5 +291,8 @@ export interface CreemOptions {
    *   // Your database logic here
    * }
    */
-  onRevokeAccess?: (context: RevokeAccessContext) => void | Promise<void>;
+  onRevokeAccess?: (
+    ctx: GenericEndpointContext,
+    data: RevokeAccessContext
+  ) => void | Promise<void>;
 }

@@ -153,8 +153,8 @@ export interface CreemClient {
    *   pageSize: 50
    * });
    *
-   * if (data?.transactions) {
-   *   data.transactions.forEach(tx => {
+   * if (data?.items) {
+   *   data.items.forEach(tx => {
    *     console.log(`${tx.type}: ${tx.amount} ${tx.currency}`);
    *   });
    * }
@@ -174,7 +174,7 @@ export interface CreemClient {
    * ```typescript
    * const { data } = await authClient.creem.hasAccessGranted();
    *
-   * if (data?.hasAccess) {
+   * if (data?.hasAccessGranted) {
    *   console.log("User has active subscription");
    * }
    * ```

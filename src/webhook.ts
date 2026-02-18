@@ -46,7 +46,7 @@ const createWebhookHandler = (options: CreemOptions) => {
       switch (event.eventType) {
         case "checkout.completed":
           await onCheckoutCompleted(ctx, event, options);
-          options.onCheckoutCompleted?.({
+          options.onCheckoutCompleted?.(ctx, {
             webhookEventType: event.eventType,
             webhookId: event.id,
             webhookCreatedAt: event.created_at,
@@ -55,7 +55,7 @@ const createWebhookHandler = (options: CreemOptions) => {
           break;
 
         case "refund.created":
-          options.onRefundCreated?.({
+          options.onRefundCreated?.(ctx, {
             webhookEventType: event.eventType,
             webhookId: event.id,
             webhookCreatedAt: event.created_at,
@@ -64,7 +64,7 @@ const createWebhookHandler = (options: CreemOptions) => {
           break;
 
         case "dispute.created":
-          options.onDisputeCreated?.({
+          options.onDisputeCreated?.(ctx, {
             webhookEventType: event.eventType,
             webhookId: event.id,
             webhookCreatedAt: event.created_at,
@@ -74,11 +74,11 @@ const createWebhookHandler = (options: CreemOptions) => {
 
         case "subscription.active":
           await onSubscriptionActive(ctx, event, options);
-          options.onGrantAccess?.({
+          options.onGrantAccess?.(ctx, {
             reason: "subscription_active",
             ...event.object,
           });
-          options.onSubscriptionActive?.({
+          options.onSubscriptionActive?.(ctx, {
             webhookEventType: event.eventType,
             webhookId: event.id,
             webhookCreatedAt: event.created_at,
@@ -88,11 +88,11 @@ const createWebhookHandler = (options: CreemOptions) => {
 
         case "subscription.trialing":
           await onSubscriptionTrialing(ctx, event, options);
-          options.onGrantAccess?.({
+          options.onGrantAccess?.(ctx, {
             reason: "subscription_trialing",
             ...event.object,
           });
-          options.onSubscriptionTrialing?.({
+          options.onSubscriptionTrialing?.(ctx, {
             webhookEventType: event.eventType,
             webhookId: event.id,
             webhookCreatedAt: event.created_at,
@@ -102,7 +102,7 @@ const createWebhookHandler = (options: CreemOptions) => {
           break;
         case "subscription.canceled":
           await onSubscriptionCanceled(ctx, event, options);
-          options.onSubscriptionCanceled?.({
+          options.onSubscriptionCanceled?.(ctx, {
             webhookEventType: event.eventType,
             webhookId: event.id,
             webhookCreatedAt: event.created_at,
@@ -112,11 +112,11 @@ const createWebhookHandler = (options: CreemOptions) => {
 
         case "subscription.paid":
           await onSubscriptionPaid(ctx, event, options);
-          options.onGrantAccess?.({
+          options.onGrantAccess?.(ctx, {
             reason: "subscription_paid",
             ...event.object,
           });
-          options.onSubscriptionPaid?.({
+          options.onSubscriptionPaid?.(ctx, {
             webhookEventType: event.eventType,
             webhookId: event.id,
             webhookCreatedAt: event.created_at,
@@ -126,11 +126,11 @@ const createWebhookHandler = (options: CreemOptions) => {
 
         case "subscription.expired":
           await onSubscriptionExpired(ctx, event, options);
-          options.onRevokeAccess?.({
+          options.onRevokeAccess?.(ctx, {
             reason: "subscription_expired",
             ...event.object,
           });
-          options.onSubscriptionExpired?.({
+          options.onSubscriptionExpired?.(ctx, {
             webhookEventType: event.eventType,
             webhookId: event.id,
             webhookCreatedAt: event.created_at,
@@ -140,7 +140,7 @@ const createWebhookHandler = (options: CreemOptions) => {
 
         case "subscription.unpaid":
           await onSubscriptionUnpaid(ctx, event, options);
-          options.onSubscriptionUnpaid?.({
+          options.onSubscriptionUnpaid?.(ctx, {
             webhookEventType: event.eventType,
             webhookId: event.id,
             webhookCreatedAt: event.created_at,
@@ -150,7 +150,7 @@ const createWebhookHandler = (options: CreemOptions) => {
 
         case "subscription.update":
           await onSubscriptionUpdate(ctx, event, options);
-          options.onSubscriptionUpdate?.({
+          options.onSubscriptionUpdate?.(ctx, {
             webhookEventType: event.eventType,
             webhookId: event.id,
             webhookCreatedAt: event.created_at,
@@ -160,7 +160,7 @@ const createWebhookHandler = (options: CreemOptions) => {
 
         case "subscription.past_due":
           await onSubscriptionPastDue(ctx, event, options);
-          options.onSubscriptionPastDue?.({
+          options.onSubscriptionPastDue?.(ctx, {
             webhookEventType: event.eventType,
             webhookId: event.id,
             webhookCreatedAt: event.created_at,
@@ -170,11 +170,11 @@ const createWebhookHandler = (options: CreemOptions) => {
 
         case "subscription.paused":
           await onSubscriptionPaused(ctx, event, options);
-          options.onRevokeAccess?.({
+          options.onRevokeAccess?.(ctx, {
             reason: "subscription_paused",
             ...event.object,
           });
-          options.onSubscriptionPaused?.({
+          options.onSubscriptionPaused?.(ctx, {
             webhookEventType: event.eventType,
             webhookId: event.id,
             webhookCreatedAt: event.created_at,

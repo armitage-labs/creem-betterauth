@@ -10,7 +10,7 @@
     "build": "npm run build:cjs && npm run build:esm && npm run build:package-json",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
-    "build:package-json": "echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json && echo '{\"type\":\"module\"}' > dist/esm/package.json",
+    "build:package-json": "node buildPackageJson.mjs",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build",
     "test": "echo \"No tests specified\" && exit 0"
@@ -64,13 +64,13 @@
   "homepage": "https://github.com/armitage-labs/creem-betterauth#readme",
   "devDependencies": {
     "@types/node": "^20",
-    "better-auth": "^1.3.34",
-    "better-sqlite3": "^12.4.1",
+    "better-auth": "^1.4.18",
+    "better-sqlite3": "^12.6.2",
     "creem": "^1.3.6",
     "eslint": "^9",
-    "eslint-config-next": "16.0.1",
+    "eslint-config-next": "16.1.6",
     "typescript": "^5",
-    "zod": "^3.23.8"
+    "zod": "^4.3.6"
   },
   "peerDependencies": {
     "better-auth": "^1.3.34",

@@ -1,3 +1,5 @@
+import type { CreateCustomerPortalLinkRequestEntity } from "creem/models/components";
+
 /**
  * Parameters for creating a Creem customer portal session.
  *
@@ -8,16 +10,7 @@
  * });
  * ```
  */
-export interface CreatePortalInput {
-  /**
-   * Creem customer ID to create portal for.
-   * If not provided, uses the authenticated user's Creem customer ID from session.
-   *
-   * @optional
-   * @example "cust_abc123"
-   */
-  customerId?: string;
-}
+export type CreatePortalInput = Partial<CreateCustomerPortalLinkRequestEntity>;
 
 /**
  * Response from creating a customer portal session.

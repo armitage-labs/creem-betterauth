@@ -8,6 +8,7 @@ import type {
   CreateCheckoutInput,
   CreateCheckoutResponse,
 } from "./checkout-types.js";
+import type { CustomerRequestEntity } from "creem/models/components";
 
 export const CheckoutParams = z.object({
   productId: z.string(),
@@ -16,12 +17,14 @@ export const CheckoutParams = z.object({
   discountCode: z.string().optional(),
   customer: z
     .object({
-      email: z.string().email().optional(),
+      id: z.string().optional(),
+      email: z.email().optional(),
     })
     .optional(),
   customField: z.array(z.record(z.string(), z.unknown())).max(3).optional(),
   successUrl: z.string().optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
+  redirect: z.boolean().optional().prefault(false).default(false),
 });
 
 export type CheckoutParams = z.infer<typeof CheckoutParams>;
@@ -89,20 +92,26 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
         }
       }
 
+      // prefer the customer ID from the session
+      const id = session?.user?.creemCustomerId || body.customer?.id;
+      // prefer the email from the body over the session
+      const email = body.customer?.email || session?.user?.email;
+
+      let customer: CustomerRequestEntity | undefined = undefined
+
+      // prefer using the creem customer ID over email
+      if (id) {
+        customer ??= { id };
+      } else if (email) {
+        customer ??= { email };
+      }
+
       const checkout = await creem.checkouts.create({
         productId: body.productId,
         requestId: body.requestId,
         units: body.units,
         discountCode: body.discountCode,
-        customer: body.customer?.email
-          ? {
-              email: body.customer.email,
-            }
-          : session?.user?.email
-            ? {
-                email: session.user.email,
-              }
-            : undefined,
+        customer,
         //   customField: body.customField, TODO: Implement proper customField handling
         successUrl: resolveSuccessUrl(
           body.successUrl || options.defaultSuccessUrl,
@@ -123,7 +132,7 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
 
       return ctx.json({
         url: checkout.checkoutUrl,
-        redirect: true,
+        redirect: !!body.redirect,
       });
     } catch (error) {
       return ctx.json({ error: "Failed to create checkout" }, { status: 500 });

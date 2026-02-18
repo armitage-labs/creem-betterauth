@@ -50,6 +50,12 @@ const createSearchTransactionsHandler = (
       // Use the user's Creem customer ID if no customerId is provided
       const customerId = body.customerId || session.user.creemCustomerId;
 
+      // If the caller supplied an explicit customerId, ensure it belongs to the
+      // authenticated user.
+      if (body.customerId && session.user?.creemCustomerId && body.customerId !== session.user.creemCustomerId) {
+        return ctx.json({ error: "Provided customerId does not match authenticated user" }, { status: 403 });
+      }
+
       if (!customerId) {
         return ctx.json(
           { error: "User must have a Creem customer ID" },
@@ -101,8 +107,8 @@ const createSearchTransactionsHandler = (
  *   pageSize: 50
  * });
  *
- * if (data?.transactions) {
- *   data.transactions.forEach(tx => {
+ * if (data?.items) {
+ *   data.items.forEach(tx => {
  *     console.log(`${tx.type}: ${tx.amount} ${tx.currency}`);
  *   });
  * }

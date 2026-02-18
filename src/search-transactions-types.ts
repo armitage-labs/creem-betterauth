@@ -1,3 +1,8 @@
+import type {
+  TransactionEntity$Outbound,
+  TransactionListEntity$Outbound,
+} from "creem/models/components";
+
 /**
  * Parameters for searching Creem transactions.
  *
@@ -59,95 +64,10 @@ export interface SearchTransactionsInput {
 /**
  * A single transaction object from Creem.
  */
-export interface TransactionData {
-  /**
-   * Unique transaction identifier
-   */
-  id: string;
-
-  /**
-   * Transaction type
-   * @example "payment", "refund"
-   */
-  type: string;
-
-  /**
-   * Transaction status
-   * @example "succeeded", "failed", "pending"
-   */
-  status: string;
-
-  /**
-   * Transaction amount
-   */
-  amount: number;
-
-  /**
-   * Currency code
-   * @example "USD", "EUR"
-   */
-  currency: string;
-
-  /**
-   * Customer information
-   */
-  customer: {
-    id: string;
-    email: string;
-    name?: string;
-  };
-
-  /**
-   * Product information (if applicable)
-   */
-  product?: {
-    id: string;
-    name: string;
-  };
-
-  /**
-   * Order ID associated with this transaction
-   */
-  order_id?: string;
-
-  /**
-   * Transaction creation date (Unix timestamp)
-   */
-  created_at: number;
-
-  /**
-   * Custom metadata stored with the transaction
-   */
-  metadata?: Record<string, unknown>;
-
-  /**
-   * Additional transaction properties from Creem API
-   */
-  [key: string]: unknown;
-}
+export type TransactionData = TransactionEntity$Outbound;
 
 /**
  * Response from searching transactions.
  */
-export interface SearchTransactionsResponse {
-  /**
-   * Array of transaction objects
-   */
-  transactions: TransactionData[];
-
-  /**
-   * Total number of transactions matching the query
-   */
-  total?: number;
-
-  /**
-   * Current page number
-   */
-  page?: number;
-
-  /**
-   * Additional pagination or response data from Creem API
-   */
-  [key: string]: unknown;
-}
+export type SearchTransactionsResponse = TransactionListEntity$Outbound;
 
