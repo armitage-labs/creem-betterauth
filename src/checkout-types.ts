@@ -1,11 +1,13 @@
+import type {
+  CustomerRequestEntity,
+  CustomFieldRequestEntity,
+} from "creem/models/components";
+
 /**
  * Customer information for checkout.
  * If not provided, the authenticated user's email will be used automatically.
  */
-export interface CheckoutCustomer {
-  /** Customer email address */
-  email?: string;
-}
+export type CheckoutCustomer = CustomerRequestEntity;
 
 /**
  * Parameters for creating a Creem checkout session.
@@ -74,7 +76,7 @@ export interface CreateCheckoutInput {
    * @maxItems 3
    * @example [{ custom_field_1: "value1" }, { custom_field_2: "value2" }]
    */
-  customField?: Array<Record<string, unknown>>;
+  customField?: CustomFieldRequestEntity[];
 
   /**
    * URL to redirect to after successful checkout.
