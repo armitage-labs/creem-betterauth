@@ -1,5 +1,4 @@
 import { Creem } from "creem";
-import type { CreemOptions } from "./types.js";
 import type {
   CreateCheckoutInput,
   CreateCheckoutResponse,
