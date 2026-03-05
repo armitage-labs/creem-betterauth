@@ -13,7 +13,6 @@ export interface CreatePortalInput {
    * Creem customer ID to create portal for.
    * If not provided, uses the authenticated user's Creem customer ID from session.
    *
-   * @optional
    * @example "cust_abc123"
    */
   customerId?: string;
@@ -35,4 +34,3 @@ export interface CreatePortalResponse {
    */
   redirect: boolean;
 }
-

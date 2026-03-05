@@ -1,5 +1,5 @@
 import { createAuthEndpoint } from "better-auth/api";
-import type { GenericEndpointContext } from "better-auth";
+import { type GenericEndpointContext, logger } from "better-auth";
 import type { CreemOptions } from "./types.js";
 import { generateSignature, parseWebhookEvent } from "./utils.js";
 import {
@@ -27,18 +27,20 @@ const createWebhookHandler = (options: CreemOptions) => {
       const signature = ctx.request.headers.get("creem-signature");
 
       if (!options.webhookSecret) {
-        return ctx.json({ error: "Invalid signature" }, { status: 400 });
+        logger.error("[creem] Webhook secret is not configured");
+        return ctx.json({ error: "Webhook secret is not configured" }, { status: 400 });
       }
 
-      const computedSignature = await generateSignature(
-        buf,
-        options.webhookSecret,
-      );
+      const computedSignature = await generateSignature(buf, options.webhookSecret);
       if (computedSignature !== signature) {
         return ctx.json({ error: "Invalid signature" }, { status: 400 });
       }
 
+      logger.debug("[creem] Webhook signature verified");
+
       const event = parseWebhookEvent(buf);
+
+      logger.debug(`[creem] Webhook event received: ${event.eventType} (id: ${event.id})`);
 
       // TypeScript now knows the exact event type in each case
       // The parsed event from Creem webhooks always has expanded objects
@@ -183,12 +185,14 @@ const createWebhookHandler = (options: CreemOptions) => {
           break;
 
         default:
-          ctx.json({ error: "Unknown event type" }, { status: 400 });
-          break;
+          logger.warn(`[creem] Unknown event type received: ${(event as any).eventType}`);
+          return ctx.json({ error: "Unknown event type" }, { status: 400 });
       }
 
       return ctx.json({ message: "Webhook received" });
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`[creem] Failed to process webhook: ${message}`);
       return ctx.json({ error: "Failed to process webhook" }, { status: 500 });
     }
   };

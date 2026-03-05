@@ -4,10 +4,7 @@ import { Creem } from "creem";
 import { z } from "zod";
 import type { CreemOptions } from "./types.js";
 import { resolveSuccessUrl } from "./utils.js";
-import type {
-  CreateCheckoutInput,
-  CreateCheckoutResponse,
-} from "./checkout-types.js";
+import type { CreateCheckoutInput, CreateCheckoutResponse } from "./checkout-types.js";
 
 export const CheckoutParams = z.object({
   productId: z.string(),
@@ -59,7 +56,7 @@ async function checkUserHadTrial(
   } catch (error) {
     // If check fails, allow the checkout to proceed (fail open)
     // The trial abuse prevention is a convenience feature, not a security feature
-    logger.warn(`Failed to check hadTrial status for user ${userId}`);
+    logger.warn(`[creem] Failed to check hadTrial status for user ${userId}`);
     return false;
   }
 }
@@ -70,7 +67,10 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
 
     if (!options.apiKey) {
       return ctx.json(
-        { error: "Creem API key is not configured. Please set the apiKey option when initializing the Creem plugin." },
+        {
+          error:
+            "Creem API key is not configured. Please set the apiKey option when initializing the Creem plugin.",
+        },
         { status: 500 },
       );
     }
@@ -78,13 +78,17 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
     try {
       const session = await getSessionFromCtx(ctx);
 
+      logger.debug(
+        `[creem] Checkout: user=${session?.user?.id || "anonymous"}, product=${body.productId}`,
+      );
+
       // Check if user has already used a trial (trial abuse prevention)
       let userHadTrial = false;
       if (session?.user?.id) {
         userHadTrial = await checkUserHadTrial(ctx, session.user.id, options);
         if (userHadTrial) {
           logger.info(
-            `User ${session.user.id} has already used a trial - skipTrial flag will be set`,
+            `[creem] User ${session.user.id} has already used a trial - skipTrial flag will be set`,
           );
         }
       }
@@ -103,11 +107,8 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
                 email: session.user.email,
               }
             : undefined,
-        //   customField: body.customField, TODO: Implement proper customField handling
-        successUrl: resolveSuccessUrl(
-          body.successUrl || options.defaultSuccessUrl,
-          ctx,
-        ),
+        // TODO: Implement proper customField handling once Creem SDK supports it
+        successUrl: resolveSuccessUrl(body.successUrl || options.defaultSuccessUrl, ctx),
         metadata: {
           ...(body.metadata || {}),
           ...(session?.user?.id && {
@@ -121,11 +122,15 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
         },
       });
 
+      logger.debug(`[creem] Checkout created: ${checkout.checkoutUrl}`);
+
       return ctx.json({
         url: checkout.checkoutUrl,
         redirect: true,
       });
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`[creem] Failed to create checkout: ${message}`);
       return ctx.json({ error: "Failed to create checkout" }, { status: 500 });
     }
   };

@@ -42,9 +42,7 @@ export async function onCheckoutCompleted(
   const shouldPersist = options.persistSubscriptions !== false;
 
   if (!shouldPersist) {
-    logger.info(
-      "Database persistence disabled, skipping checkout.completed database operations",
-    );
+    logger.info("[creem] Persistence disabled, skipping checkout.completed DB operations");
     return;
   }
 
@@ -55,9 +53,7 @@ export async function onCheckoutCompleted(
     const customerId = checkout.customer?.id;
 
     if (!customerId) {
-      logger.warn(
-        "Creem webhook: No customer ID found in checkout.completed event",
-      );
+      logger.warn("[creem] No customer ID in checkout.completed event");
       return;
     }
 
@@ -65,11 +61,13 @@ export async function onCheckoutCompleted(
     const referenceId = checkout.metadata?.referenceId as string;
 
     if (!referenceId) {
-      logger.warn(
-        "Creem webhook: No referenceId found in checkout.completed event",
-      );
+      logger.warn("[creem] No referenceId in checkout.completed event");
       return;
     }
+
+    logger.debug(
+      `[creem] checkout.completed: customerId=${customerId}, referenceId=${referenceId}, hasSubscription=${!!checkout.subscription}`,
+    );
 
     // Update user with creemCustomerId (if user exists)
     try {
@@ -89,19 +87,17 @@ export async function onCheckoutCompleted(
             creemCustomerId: customerId,
           },
         });
-        logger.info(
-          `Updated user ${referenceId} with creemCustomerId: ${customerId}`,
-        );
+        logger.info(`[creem] Updated user ${referenceId} with creemCustomerId: ${customerId}`);
       }
     } catch (error) {
-      logger.error(`Failed to update user with creemCustomerId: ${error}`);
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`[creem] Failed to update user with creemCustomerId: ${message}`);
     }
 
     // Handle subscription if this is a recurring product
     if (checkout.subscription && checkout.order) {
       const subscriptionData = checkout.subscription;
-      const orderId =
-        typeof checkout.order === "object" ? checkout.order.id : checkout.order;
+      const orderId = typeof checkout.order === "object" ? checkout.order.id : checkout.order;
       const productId = checkout.product.id;
 
       if (subscriptionData.id) {
@@ -121,13 +117,10 @@ export async function onCheckoutCompleted(
         };
 
         // Try to find existing subscription by creemSubscriptionId or referenceId + productId
-        const existingSubscription =
-          await ctx.context.adapter.findOne<Subscription>({
-            model: "creem_subscription",
-            where: [
-              { field: "creemSubscriptionId", value: subscriptionData.id },
-            ],
-          });
+        const existingSubscription = await ctx.context.adapter.findOne<Subscription>({
+          model: "creem_subscription",
+          where: [{ field: "creemSubscriptionId", value: subscriptionData.id }],
+        });
 
         if (existingSubscription) {
           // Update existing subscription
@@ -136,25 +129,20 @@ export async function onCheckoutCompleted(
             where: [{ field: "id", value: existingSubscription.id }],
             update: subscriptionUpdate,
           });
-          logger.info(
-            `Updated subscription ${existingSubscription.id} with Creem data`,
-          );
+          logger.info(`[creem] Updated subscription ${existingSubscription.id} from checkout`);
         } else {
           // Create new subscription
-          const newSubscription =
-            await ctx.context.adapter.create<Subscription>({
-              model: "creem_subscription",
-              data: subscriptionUpdate,
-            });
-          logger.info(
-            `Created new subscription ${newSubscription.id} from checkout`,
-          );
+          const newSubscription = await ctx.context.adapter.create<Subscription>({
+            model: "creem_subscription",
+            data: subscriptionUpdate,
+          });
+          logger.info(`[creem] Created subscription ${newSubscription.id} from checkout`);
         }
       }
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    logger.error(`Creem webhook failed (checkout.completed): ${message}`);
+    logger.error(`[creem] Webhook failed (checkout.completed): ${message}`);
   }
 }
 
@@ -207,9 +195,7 @@ async function markUserAsHadTrial(
 
   const referenceId = subscriptionData.metadata?.referenceId as string;
   if (!referenceId) {
-    logger.warn(
-      "Creem webhook: Cannot mark user as hadTrial - no referenceId in subscription metadata",
-    );
+    logger.warn("[creem] Cannot mark user as hadTrial - no referenceId in subscription metadata");
     return;
   }
 
@@ -225,7 +211,7 @@ async function markUserAsHadTrial(
 
     if (!user) {
       logger.warn(
-        `Creem webhook: User not found for referenceId: ${referenceId}, cannot mark as hadTrial`,
+        `[creem] User not found for referenceId: ${referenceId}, cannot mark as hadTrial`,
       );
       return;
     }
@@ -239,13 +225,11 @@ async function markUserAsHadTrial(
           hadTrial: true,
         },
       });
-      logger.info(
-        `Marked user ${referenceId} as hadTrial=true (trial abuse prevention)`,
-      );
+      logger.info(`[creem] Marked user ${referenceId} as hadTrial=true`);
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    logger.error(`Failed to mark user as hadTrial: ${message}`);
+    logger.error(`[creem] Failed to mark user as hadTrial: ${message}`);
   }
 }
 
@@ -270,12 +254,7 @@ export async function onSubscriptionPaid(
   event: NormalizedSubscriptionPaidEvent,
   options: CreemOptions,
 ) {
-  await updateSubscriptionFromEvent(
-    ctx,
-    event.object,
-    event.object.status,
-    options,
-  );
+  await updateSubscriptionFromEvent(ctx, event.object, event.object.status, options);
 }
 
 /**
@@ -287,7 +266,7 @@ export async function onSubscriptionExpired(
   event: NormalizedSubscriptionExpiredEvent,
   options: CreemOptions,
 ) {
-  await updateSubscriptionFromEvent(ctx, event.object, "unpaid", options); // TODO: Check expired status
+  await updateSubscriptionFromEvent(ctx, event.object, "expired", options);
 }
 
 /**
@@ -311,12 +290,7 @@ export async function onSubscriptionUpdate(
   event: NormalizedSubscriptionUpdateEvent,
   options: CreemOptions,
 ) {
-  await updateSubscriptionFromEvent(
-    ctx,
-    event.object,
-    event.object.status,
-    options,
-  );
+  await updateSubscriptionFromEvent(ctx, event.object, event.object.status, options);
 }
 
 /**
@@ -328,7 +302,7 @@ export async function onSubscriptionPastDue(
   event: NormalizedSubscriptionPastDueEvent,
   options: CreemOptions,
 ) {
-  await updateSubscriptionFromEvent(ctx, event.object, "unpaid", options); // TODO: Check past_due status
+  await updateSubscriptionFromEvent(ctx, event.object, "past_due", options);
 }
 
 /**
@@ -356,18 +330,14 @@ async function updateSubscriptionFromEvent(
   const shouldPersist = options.persistSubscriptions !== false;
 
   if (!shouldPersist) {
-    logger.info(
-      "Database persistence disabled, skipping subscription database operations",
-    );
+    logger.info("[creem] Persistence disabled, skipping subscription DB operations");
     return;
   }
 
   const referenceId = subscriptionData.metadata?.referenceId;
 
   if (!referenceId) {
-    logger.warn(
-      "Creem webhook: No referenceId found in subscription event. The user is likely not logged in.",
-    );
+    logger.warn("[creem] No referenceId in subscription event metadata");
     return;
   }
 
@@ -375,6 +345,8 @@ async function updateSubscriptionFromEvent(
     // Customer and product are always expanded in webhook events
     const customerId = subscriptionData.customer.id;
     const productId = subscriptionData.product.id;
+
+    logger.debug(`[creem] Subscription lookup: trying creemSubscriptionId=${subscriptionData.id}`);
 
     // Find subscription by creemSubscriptionId
     let subscription = await ctx.context.adapter.findOne<Subscription>({
@@ -384,6 +356,7 @@ async function updateSubscriptionFromEvent(
 
     // If not found by creemSubscriptionId, try to find by creemCustomerId and productId
     if (!subscription && customerId) {
+      logger.debug(`[creem] Subscription lookup: fallback to customerId=${customerId}`);
       const subscriptions = await ctx.context.adapter.findMany<Subscription>({
         model: "creem_subscription",
         where: [{ field: "creemCustomerId", value: customerId }],
@@ -391,15 +364,11 @@ async function updateSubscriptionFromEvent(
 
       // Find the subscription for this specific product
       subscription =
-        subscriptions.find(
-          (sub: Subscription) => sub.productId === productId,
-        ) || subscriptions[0];
+        subscriptions.find((sub: Subscription) => sub.productId === productId) || subscriptions[0];
     }
 
     if (!subscription) {
-      logger.warn(
-        `Creem webhook: Subscription not found for creemSubscriptionId: ${subscriptionData.id}`,
-      );
+      logger.warn(`[creem] Subscription not found for creemSubscriptionId: ${subscriptionData.id}`);
       return;
     }
 
@@ -423,9 +392,9 @@ async function updateSubscriptionFromEvent(
       update: updateData,
     });
 
-    logger.info(`Updated subscription ${subscription.id} to status: ${status}`);
+    logger.info(`[creem] Updated subscription ${subscription.id} to status: ${status}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    logger.error(`Creem webhook failed (subscription update): ${message}`);
+    logger.error(`[creem] Webhook failed (subscription update): ${message}`);
   }
 }

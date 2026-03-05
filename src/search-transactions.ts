@@ -1,5 +1,5 @@
 import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
-import type { GenericEndpointContext } from "better-auth";
+import { type GenericEndpointContext, logger } from "better-auth";
 import { Creem } from "creem";
 import { z } from "zod";
 import type { CreemOptions } from "./types.js";
@@ -20,22 +20,18 @@ export const SearchTransactionsParams = z.object({
 export type SearchTransactionsParams = z.infer<typeof SearchTransactionsParams>;
 
 // Re-export types for convenience
-export type {
-  SearchTransactionsInput,
-  SearchTransactionsResponse,
-  TransactionData,
-};
+export type { SearchTransactionsInput, SearchTransactionsResponse, TransactionData };
 
-const createSearchTransactionsHandler = (
-  creem: Creem,
-  options: CreemOptions,
-) => {
+const createSearchTransactionsHandler = (creem: Creem, options: CreemOptions) => {
   return async (ctx: GenericEndpointContext) => {
     const body = ctx.body as SearchTransactionsParams;
 
     if (!options.apiKey) {
       return ctx.json(
-        { error: "Creem API key is not configured. Please set the apiKey option when initializing the Creem plugin." },
+        {
+          error:
+            "Creem API key is not configured. Please set the apiKey option when initializing the Creem plugin.",
+        },
         { status: 500 },
       );
     }
@@ -51,11 +47,10 @@ const createSearchTransactionsHandler = (
       const customerId = body.customerId || session.user.creemCustomerId;
 
       if (!customerId) {
-        return ctx.json(
-          { error: "User must have a Creem customer ID" },
-          { status: 400 },
-        );
+        return ctx.json({ error: "User must have a Creem customer ID" }, { status: 400 });
       }
+
+      logger.debug(`[creem] Searching transactions for customer: ${customerId}`);
 
       const transactions = await creem.transactions.search(
         customerId,
@@ -67,10 +62,9 @@ const createSearchTransactionsHandler = (
 
       return ctx.json(transactions);
     } catch (error) {
-      return ctx.json(
-        { error: "Failed to search transactions" },
-        { status: 500 },
-      );
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`[creem] Failed to search transactions: ${message}`);
+      return ctx.json({ error: "Failed to search transactions" }, { status: 500 });
     }
   };
 };
@@ -108,10 +102,7 @@ const createSearchTransactionsHandler = (
  * }
  * ```
  */
-export const createSearchTransactionsEndpoint = (
-  creem: Creem,
-  options: CreemOptions,
-) => {
+export const createSearchTransactionsEndpoint = (creem: Creem, options: CreemOptions) => {
   return createAuthEndpoint(
     "/creem/search-transactions",
     {

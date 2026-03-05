@@ -1,12 +1,9 @@
 import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
-import type { GenericEndpointContext } from "better-auth";
+import { type GenericEndpointContext, logger } from "better-auth";
 import { Creem } from "creem";
 import { z } from "zod";
 import type { CreemOptions } from "./types.js";
-import type {
-  CreatePortalInput,
-  CreatePortalResponse,
-} from "./portal-types.js";
+import type { CreatePortalInput, CreatePortalResponse } from "./portal-types.js";
 
 export const PortalParams = z.object({
   customerId: z.string().optional(),
@@ -23,7 +20,10 @@ const createPortalHandler = (creem: Creem, options: CreemOptions) => {
 
     if (!options.apiKey) {
       return ctx.json(
-        { error: "Creem API key is not configured. Please set the apiKey option when initializing the Creem plugin." },
+        {
+          error:
+            "Creem API key is not configured. Please set the apiKey option when initializing the Creem plugin.",
+        },
         { status: 500 },
       );
     }
@@ -36,21 +36,24 @@ const createPortalHandler = (creem: Creem, options: CreemOptions) => {
       }
 
       if (!session?.user.creemCustomerId) {
-        return ctx.json(
-          { error: "User must have a Creem customer ID" },
-          { status: 400 },
-        );
+        return ctx.json({ error: "User must have a Creem customer ID" }, { status: 400 });
       }
+
+      logger.debug(`[creem] Portal: customer=${body.customerId || session.user.creemCustomerId}`);
 
       const portal = await creem.customers.generateBillingLinks({
         customerId: body.customerId || session.user.creemCustomerId,
       });
+
+      logger.debug(`[creem] Portal created: ${portal.customerPortalLink}`);
 
       return ctx.json({
         url: portal.customerPortalLink,
         redirect: true,
       });
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`[creem] Failed to create portal: ${message}`);
       return ctx.json({ error: "Failed to create portal" }, { status: 500 });
     }
   };
@@ -62,7 +65,7 @@ const createPortalHandler = (creem: Creem, options: CreemOptions) => {
  * This endpoint generates a Creem customer portal URL where users can
  * manage their subscriptions, view invoices, and update payment methods.
  *
- * @param serverURL - The Creem API server URL
+ * @param creem - The Creem client instance
  * @param options - Plugin configuration options
  * @returns BetterAuth endpoint configuration
  *
@@ -84,10 +87,7 @@ const createPortalHandler = (creem: Creem, options: CreemOptions) => {
  * }
  * ```
  */
-export const createPortalEndpoint = (
-  creem: Creem,
-  options: CreemOptions,
-) => {
+export const createPortalEndpoint = (creem: Creem, options: CreemOptions) => {
   return createAuthEndpoint(
     "/creem/create-portal",
     {
