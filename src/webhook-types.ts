@@ -282,7 +282,14 @@ export interface SubscriptionItemEntity extends BaseEntity {
   updated_at: Date;
 }
 
-export type SubscriptionStatus = "active" | "canceled" | "unpaid" | "paused" | "trialing";
+export type SubscriptionStatus =
+  | "active"
+  | "canceled"
+  | "expired"
+  | "past_due"
+  | "unpaid"
+  | "paused"
+  | "trialing";
 
 export interface SubscriptionEntity extends BaseEntity {
   /** String representing the object's type */

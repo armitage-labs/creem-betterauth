@@ -1,4 +1,4 @@
-import { BetterAuthPlugin } from "better-auth";
+import { BetterAuthPlugin, logger } from "better-auth";
 import { Creem } from "creem";
 import { getSchema } from "./schema.js";
 import { createCheckoutEndpoint } from "./checkout.js";
@@ -84,7 +84,7 @@ export {
  *
  * @example
  * ```typescript
- * import { creem } from "./lib/creem-betterauth";
+ * import { creem } from "@creem_io/better-auth";
  *
  * export const auth = betterAuth({
  *   plugins: [
@@ -112,10 +112,14 @@ export const creem = (options: CreemOptions) => {
   });
 
   if (!options.apiKey) {
-    console.warn(
-      "⚠️  Creem API key is not set. The plugin will initialize, but Creem API functionality will not work until an API key is provided.",
+    logger.warn(
+      "[creem] API key is not set. The plugin will initialize, but API functionality will not work until an API key is provided.",
     );
   }
+
+  logger.debug(
+    `[creem] Plugin initialized (${options.testMode ? "test" : "production"} mode, persistence: ${options.persistSubscriptions !== false}, webhook: ${!!options.webhookSecret})`,
+  );
 
   return {
     id: "creem",

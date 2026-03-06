@@ -94,6 +94,23 @@ export type RevokeAccessContext = {
   reason: RevokeAccessReason;
 } & NormalizedSubscriptionEntity;
 
+/**
+ * Internal interface representing a subscription record in the database.
+ * Used by endpoint handlers and webhook hooks for DB operations.
+ */
+export interface SubscriptionRecord {
+  id: string;
+  productId: string;
+  referenceId: string;
+  creemCustomerId?: string;
+  creemSubscriptionId?: string;
+  creemOrderId?: string;
+  status: string;
+  periodStart?: Date;
+  periodEnd?: Date;
+  cancelAtPeriodEnd?: boolean;
+}
+
 export interface CreemOptions {
   /**
    * Creem API Key
@@ -107,10 +124,6 @@ export interface CreemOptions {
    * Test mode
    */
   testMode?: boolean;
-  /**
-   * Base URL
-   */
-  baseUrl?: string;
   /**
    * Default success URL
    */

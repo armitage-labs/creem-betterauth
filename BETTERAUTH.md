@@ -5,8 +5,7 @@ description: Better Auth Plugin for Payment and Subscriptions using Creem
 
 [Creem](https://creem.io) is a financial OS that enables teams and individuals selling software globally to split revenue and collaborate on financial workflows without any tax compliance headaches. This plugin integrates Creem with Better Auth, bringing payment processing and subscription management directly into your authentication layer.
 
-<Card href="https://discord.gg/q3GKZs92Av" title="Get support on Creem Discord or in our in-app live-chat"
-
+<Card href="https://discord.gg/q3GKZs92Av" title="Get support on Creem Discord or in our in-app live-chat" />
 
 ## Features
 
@@ -295,9 +294,9 @@ Verify if the user has an active subscription (requires database mode):
 ```typescript
 const { data } = await authClient.creem.hasAccessGranted();
 
-if (data?.hasAccess) {
+if (data?.hasAccessGranted) {
   // User has active subscription access
-  console.log(`Expires: ${data.expiresAt}`);
+  console.log(`Period end: ${data.subscription?.periodEnd}`);
 }
 ```
 
@@ -598,11 +597,11 @@ export async function POST(req: Request) {
   const signature = req.headers.get("creem-signature");
 
   if (
-    !validateWebhookSignature(
+    !(await validateWebhookSignature(
       payload,
       signature,
       process.env.CREEM_WEBHOOK_SECRET!
-    )
+    ))
   ) {
     return new Response("Invalid signature", { status: 401 });
   }

@@ -21,7 +21,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 20+ and pnpm
 - Git
 - A Better-Auth project for testing (optional but recommended)
 
@@ -36,17 +36,17 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 3. Install dependencies:
    ```bash
-   npm install
+   pnpm install
    ```
 
 4. Build the project:
    ```bash
-   npm run build
+   pnpm run build
    ```
 
 5. Run type checking:
    ```bash
-   npm run typecheck
+   pnpm run typecheck
    ```
 
 ## 💻 Development Workflow
@@ -62,25 +62,29 @@ creem-betterauth/
 │   ├── checkout.ts          # Checkout endpoint
 │   ├── portal.ts            # Portal endpoint
 │   ├── *-types.ts           # Type definitions
+│   ├── __tests__/           # Unit tests (Vitest)
+│   ├── __integration__/     # Integration tests
 │   └── ...                  # Other endpoints
 ├── dist/                     # Compiled output (gitignored)
 ├── examples/                 # Example implementations
 ├── docs/                     # Additional documentation
-├── .github/                  # GitHub configs
-└── test/                     # Tests
+└── .github/                  # GitHub configs
 ```
 
 ### Development Scripts
 
 ```bash
 # Build the project
-npm run build
+pnpm run build
 
 # Type check without building
-npm run typecheck
+pnpm run typecheck
 
-# Watch mode (if implemented)
-npm run dev
+# Run tests
+pnpm test
+
+# Run the Next.js example app
+pnpm --filter examples-nextjs dev
 ```
 
 ### Making Changes
@@ -92,9 +96,10 @@ npm run dev
 
 2. Make your changes in the `src/` directory
 
-3. Ensure your code builds:
+3. Ensure your code builds and tests pass:
    ```bash
-   npm run build
+   pnpm run build
+   pnpm test
    ```
 
 4. Test your changes with the examples or in a real project
@@ -193,32 +198,34 @@ docs: update README with server utilities guide
 
 ## 🧪 Testing
 
-Currently, the project uses manual testing with example projects. We welcome contributions to add automated testing!
+The project uses **Vitest** for unit and integration testing (183+ tests).
 
-### Manual Testing
+### Running Tests
 
-1. Create a test Better-Auth project
-2. Link your local package:
-   ```bash
-   npm run build
-   npm link
-   ```
+```bash
+# Run all tests
+pnpm test
 
-3. In your test project:
-   ```bash
-   npm link @creem_io/better-auth
-   ```
+# Run tests in watch mode
+pnpm vitest
 
-4. Test your changes in the test project
+# Run a specific test file
+pnpm vitest src/__tests__/hooks.test.ts
+```
 
-### Future: Automated Tests
+### Test Structure
 
-We're looking to add:
-- Unit tests with Jest or Vitest
-- Integration tests with Better-Auth
-- Type tests with tsd or similar
+- `src/__tests__/` — Unit tests for endpoints, hooks, server utilities, etc.
+- `src/__integration__/` — Integration tests
 
-Contributions welcome!
+### Testing with the Example App
+
+The project uses pnpm workspaces, so the example app resolves `@creem_io/better-auth` from your local build automatically:
+
+```bash
+pnpm run build
+pnpm --filter examples-nextjs dev
+```
 
 ## 📬 Submitting Changes
 

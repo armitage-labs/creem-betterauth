@@ -1,8 +1,8 @@
 import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
-import type { GenericEndpointContext } from "better-auth";
+import { type GenericEndpointContext, logger } from "better-auth";
 import { Creem } from "creem";
 import { z } from "zod";
-import type { CreemOptions } from "./types.js";
+import type { CreemOptions, SubscriptionRecord } from "./types.js";
 import type { RetrieveSubscriptionInput, SubscriptionData } from "./retrieve-subscription-types.js";
 
 export const RetrieveSubscriptionParams = z.object({
@@ -10,19 +10,6 @@ export const RetrieveSubscriptionParams = z.object({
 });
 
 export type RetrieveSubscriptionParams = z.infer<typeof RetrieveSubscriptionParams>;
-
-interface Subscription {
-  id: string;
-  productId: string;
-  referenceId: string;
-  creemCustomerId?: string;
-  creemSubscriptionId?: string;
-  creemOrderId?: string;
-  status: string;
-  periodStart?: Date;
-  periodEnd?: Date;
-  cancelAtPeriodEnd?: boolean;
-}
 
 // Re-export types for convenience
 export type { RetrieveSubscriptionInput, SubscriptionData };
@@ -57,8 +44,10 @@ const createRetrieveSubscriptionHandler = (creem: Creem, options: CreemOptions) 
         // If database persistence is enabled, fetch the user's subscription from the database
         const userId = session.user.id;
 
+        logger.debug(`[creem] Retrieve: looking up subscriptions for user ${userId}`);
+
         // Find all subscriptions for this user
-        const subscriptions = await ctx.context.adapter.findMany<Subscription>({
+        const subscriptions = await ctx.context.adapter.findMany<SubscriptionRecord>({
           model: "creem_subscription",
           where: [{ field: "referenceId", value: userId }],
         });
@@ -88,10 +77,14 @@ const createRetrieveSubscriptionHandler = (creem: Creem, options: CreemOptions) 
         );
       }
 
+      logger.debug(`[creem] Retrieving subscription: ${subscriptionId}`);
+
       const subscription = await creem.subscriptions.get(subscriptionId);
 
       return ctx.json(subscription);
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`[creem] Failed to retrieve subscription: ${message}`);
       return ctx.json({ error: "Failed to retrieve subscription" }, { status: 500 });
     }
   };

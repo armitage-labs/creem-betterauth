@@ -97,12 +97,19 @@ export const creemClient = () => {
   return {
     id: "creem",
     $InferServerPlugin: {} as ReturnType<typeof creem>,
+    pathMethods: {
+      "/creem/create-portal": "POST",
+      "/creem/cancel-subscription": "POST",
+      "/creem/retrieve-subscription": "POST",
+      "/creem/search-transactions": "POST",
+    },
   } satisfies BetterAuthClientPlugin;
 };
 ```
 
 **Responsibilities:**
 - Type inference for client-side methods
+- Map HTTP methods for endpoints that Better Auth can't infer from the schema
 - Connect to server-side plugin
 
 ### 3. Enhanced Client (`src/create-creem-auth-client.ts`)
@@ -142,16 +149,16 @@ export async function checkSubscriptionAccess(config, options) {
 - Middleware
 - Cron jobs
 
-### 5. Endpoints (`src/*-endpoint.ts`)
+### 5. Endpoints
 
 Better Auth endpoint implementations:
 
-- `checkout.ts` - Create checkout sessions
-- `portal.ts` - Customer portal access
-- `cancel-subscription.ts` - Cancel subscriptions
-- `retrieve-subscription.ts` - Get subscription details
-- `search-transactions.ts` - Search transactions
-- `has-active-subscription.ts` - Check access
+- `src/checkout.ts` - Create checkout sessions
+- `src/portal.ts` - Customer portal access
+- `src/cancel-subscription.ts` - Cancel subscriptions
+- `src/retrieve-subscription.ts` - Get subscription details
+- `src/search-transactions.ts` - Search transactions
+- `src/has-active-subscription.ts` - Check access
 
 **Pattern:**
 ```typescript
@@ -169,15 +176,18 @@ export const createCheckoutEndpoint = (creem, options) => {
 Webhook processing with signature verification:
 
 ```typescript
-// webhook.ts - Main webhook endpoint
+// webhook.ts - Main webhook endpoint & event dispatch
+// Verifies signature, parses event, dispatches to hooks.ts for DB ops,
+// then calls user-provided callbacks (onGrantAccess, onCheckoutCompleted, etc.)
 export const createWebhookEndpoint = (options) => {
   return createAuthEndpoint("/creem/webhook", ...);
 };
 
-// hooks.ts - Event handlers
+// hooks.ts - Database operations only
+// Each handler updates the local subscription/user records.
+// Does NOT call user callbacks — that happens in webhook.ts.
 export async function onSubscriptionActive(ctx, event, options) {
   // Update database
-  // Call user callbacks
 }
 ```
 
@@ -342,7 +352,8 @@ try {
   const result = await creem.createCheckout(...);
   return ctx.json(result);
 } catch (error) {
-  console.error("Creem error:", error);
+  const message = error instanceof Error ? error.message : String(error);
+  logger.error(`[creem] Failed to create checkout: ${message}`);
   return ctx.json(
     { error: "Failed to create checkout" },
     { status: 500 }
@@ -429,7 +440,8 @@ export async function customFunction() {
 
 ## Future Enhancements
 
-- [ ] Automated testing suite
+- [x] Automated testing suite (183 unit tests via Vitest)
+- [x] Next.js example app (`examples/nextjs/`)
 - [ ] Subscription plan management
 - [ ] Invoice generation helpers
 - [ ] Usage-based billing support

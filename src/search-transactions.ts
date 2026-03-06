@@ -1,5 +1,5 @@
 import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
-import type { GenericEndpointContext } from "better-auth";
+import { type GenericEndpointContext, logger } from "better-auth";
 import { Creem } from "creem";
 import { z } from "zod";
 import type { CreemOptions } from "./types.js";
@@ -50,6 +50,8 @@ const createSearchTransactionsHandler = (creem: Creem, options: CreemOptions) =>
         return ctx.json({ error: "User must have a Creem customer ID" }, { status: 400 });
       }
 
+      logger.debug(`[creem] Searching transactions for customer: ${customerId}`);
+
       const transactions = await creem.transactions.search(
         customerId,
         body.orderId,
@@ -60,6 +62,8 @@ const createSearchTransactionsHandler = (creem: Creem, options: CreemOptions) =>
 
       return ctx.json(transactions);
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`[creem] Failed to search transactions: ${message}`);
       return ctx.json({ error: "Failed to search transactions" }, { status: 500 });
     }
   };

@@ -1,8 +1,8 @@
 import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
-import type { GenericEndpointContext } from "better-auth";
+import { type GenericEndpointContext, logger } from "better-auth";
 import { Creem } from "creem";
 import { z } from "zod";
-import type { CreemOptions } from "./types.js";
+import type { CreemOptions, SubscriptionRecord } from "./types.js";
 import type {
   CancelSubscriptionInput,
   CancelSubscriptionResponse,
@@ -13,19 +13,6 @@ export const CancelSubscriptionParams = z.object({
 });
 
 export type CancelSubscriptionParams = z.infer<typeof CancelSubscriptionParams>;
-
-interface Subscription {
-  id: string;
-  productId: string;
-  referenceId: string;
-  creemCustomerId?: string;
-  creemSubscriptionId?: string;
-  creemOrderId?: string;
-  status: string;
-  periodStart?: Date;
-  periodEnd?: Date;
-  cancelAtPeriodEnd?: boolean;
-}
 
 // Re-export types for convenience
 export type { CancelSubscriptionInput, CancelSubscriptionResponse };
@@ -60,8 +47,10 @@ const createCancelSubscriptionHandler = (creem: Creem, options: CreemOptions) =>
         // If database persistence is enabled, fetch the user's subscription from the database
         const userId = session.user.id;
 
+        logger.debug(`[creem] Cancel: looking up subscriptions for user ${userId}`);
+
         // Find all subscriptions for this user
-        const subscriptions = await ctx.context.adapter.findMany<Subscription>({
+        const subscriptions = await ctx.context.adapter.findMany<SubscriptionRecord>({
           model: "creem_subscription",
           where: [{ field: "referenceId", value: userId }],
         });
@@ -100,6 +89,8 @@ const createCancelSubscriptionHandler = (creem: Creem, options: CreemOptions) =>
         );
       }
 
+      logger.debug(`[creem] Cancelling subscription: ${subscriptionId}`);
+
       await creem.subscriptions.cancel(subscriptionId, {});
 
       return ctx.json({
@@ -107,6 +98,8 @@ const createCancelSubscriptionHandler = (creem: Creem, options: CreemOptions) =>
         message: "Subscription cancelled successfully",
       });
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`[creem] Failed to cancel subscription: ${message}`);
       return ctx.json({ error: "Failed to cancel subscription" }, { status: 500 });
     }
   };

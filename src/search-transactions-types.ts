@@ -14,7 +14,6 @@ export interface SearchTransactionsInput {
    * Customer ID to filter transactions by.
    * If not provided, uses the authenticated user's Creem customer ID from session.
    *
-   * @optional
    * @example "cust_abc123"
    */
   customerId?: string;
@@ -23,8 +22,8 @@ export interface SearchTransactionsInput {
    * Page number for pagination.
    * Must be at least 1.
    *
-   * @optional
-   * @default 1
+   * Defaults to 1.
+   *
    * @example 2
    */
   pageNumber?: number;
@@ -33,8 +32,8 @@ export interface SearchTransactionsInput {
    * Number of transactions to return per page.
    * Must be a positive number.
    *
-   * @optional
-   * @default 20
+   * Defaults to 20.
+   *
    * @example 50
    */
   pageSize?: number;
@@ -42,7 +41,6 @@ export interface SearchTransactionsInput {
   /**
    * Product ID to filter transactions by.
    *
-   * @optional
    * @example "prod_abc123"
    */
   productId?: string;
@@ -50,7 +48,6 @@ export interface SearchTransactionsInput {
   /**
    * Order ID to filter transactions by.
    *
-   * @optional
    * @example "ord_abc123"
    */
   orderId?: string;

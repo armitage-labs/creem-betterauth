@@ -45,7 +45,7 @@ export default function Home() {
                   Welcome, {user.name || user.email}!
                 </h2>
                 <p className="text-gray-600 mt-2">
-                  You're successfully authenticated.
+                  You&apos;re successfully authenticated.
                 </p>
               </div>
 

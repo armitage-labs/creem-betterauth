@@ -1,26 +1,12 @@
 import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
-import type { GenericEndpointContext } from "better-auth";
+import { type GenericEndpointContext, logger } from "better-auth";
 import { z } from "zod";
-import type { CreemOptions } from "./types.js";
-import { SubscriptionStatus } from "./webhook-types.js";
+import type { CreemOptions, SubscriptionRecord } from "./types.js";
 
 // No input needed - uses session to get user ID
 export const HasAccessGrantedParams = z.object({}).optional();
 
 export type HasAccessGrantedParams = z.infer<typeof HasAccessGrantedParams>;
-
-interface Subscription {
-  id: string;
-  productId: string;
-  referenceId: string;
-  creemCustomerId?: string;
-  creemSubscriptionId?: string;
-  creemOrderId?: string;
-  status: string;
-  periodStart?: Date;
-  periodEnd?: Date;
-  cancelAtPeriodEnd?: boolean;
-}
 
 const createHasAccessGrantedHandler = (options: CreemOptions) => {
   return async (ctx: GenericEndpointContext) => {
@@ -54,10 +40,14 @@ const createHasAccessGrantedHandler = (options: CreemOptions) => {
       const userId = session.user.id;
 
       // Find all subscriptions for this user
-      const subscriptions = await ctx.context.adapter.findMany<Subscription>({
+      const subscriptions = await ctx.context.adapter.findMany<SubscriptionRecord>({
         model: "creem_subscription",
         where: [{ field: "referenceId", value: userId }],
       });
+
+      logger.debug(
+        `[creem] Access check: user=${userId}, found ${subscriptions?.length || 0} subscriptions`,
+      );
 
       if (!subscriptions || subscriptions.length === 0) {
         return ctx.json({
@@ -71,10 +61,12 @@ const createHasAccessGrantedHandler = (options: CreemOptions) => {
 
       // Check each subscription
       for (const subscription of subscriptions) {
-        const status = subscription.status.toLowerCase() as SubscriptionStatus;
+        const status = subscription.status.toLowerCase();
 
-        // Active or trialing = always has access
-        if (status === "active" || status === "trialing") {
+        // Active, trialing, or paid = always has access
+        // Note: "paid" comes from the subscription.paid webhook event type, not the SDK status field
+        if (status === "active" || status === "trialing" || status === "paid") {
+          logger.debug(`[creem] Access granted: subscription ${subscription.id} status=${status}`);
           return ctx.json({
             hasAccessGranted: true,
             subscription: {
@@ -87,12 +79,15 @@ const createHasAccessGrantedHandler = (options: CreemOptions) => {
         }
 
         // For canceled, past_due, or unpaid - check if period hasn't ended yet
-        if (status === "canceled" || status === "unpaid") {
+        if (status === "canceled" || status === "past_due" || status === "unpaid") {
           if (subscription.periodEnd) {
             const periodEnd = new Date(subscription.periodEnd);
 
             // If period hasn't ended yet, user still has access
             if (periodEnd > now) {
+              logger.debug(
+                `[creem] Access granted: subscription ${subscription.id} ${status} until ${periodEnd.toISOString()}`,
+              );
               return ctx.json({
                 hasAccessGranted: true,
                 subscription: {
@@ -108,6 +103,7 @@ const createHasAccessGrantedHandler = (options: CreemOptions) => {
         }
       }
 
+      logger.debug("[creem] Access denied: no active subscriptions");
       // No active subscriptions found
       return ctx.json({
         hasAccessGranted: false,
@@ -120,11 +116,12 @@ const createHasAccessGrantedHandler = (options: CreemOptions) => {
         })),
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error(`[creem] Failed to check subscription status: ${errorMessage}`);
       return ctx.json(
         {
           hasAccessGranted: undefined,
           message: "Failed to check subscription status",
-          error: error instanceof Error ? error.message : String(error),
         },
         { status: 500 },
       );
@@ -132,6 +129,17 @@ const createHasAccessGrantedHandler = (options: CreemOptions) => {
   };
 };
 
+/**
+ * Creates the access check endpoint for the Creem plugin.
+ *
+ * This endpoint checks whether the authenticated user has an active subscription
+ * by querying the local database for subscription records.
+ *
+ * @param options - Plugin configuration options
+ * @returns BetterAuth endpoint configuration
+ *
+ * @endpoint GET /creem/has-access-granted
+ */
 export const createHasAccessGrantedEndpoint = (options: CreemOptions) => {
   return createAuthEndpoint(
     "/creem/has-access-granted",

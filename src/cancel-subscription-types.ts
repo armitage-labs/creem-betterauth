@@ -14,7 +14,6 @@ export interface CancelSubscriptionInput {
    * You can get this from the subscription object returned by retrieveSubscription
    * or from webhook events.
    *
-   * @required
    * @example "sub_abc123"
    */
   id: string;

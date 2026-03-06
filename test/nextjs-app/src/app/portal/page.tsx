@@ -163,13 +163,13 @@ export default function Portal() {
               1. Make sure you have a Creem customer associated with your email
             </li>
             <li>
-              2. Click "Open Customer Portal" to create a portal session
+              2. Click &quot;Open Customer Portal&quot; to create a portal session
             </li>
             <li>
-              3. You'll be redirected to Creem's hosted portal page
+              3. You&apos;ll be redirected to Creem&apos;s hosted portal page
             </li>
             <li>
-              4. After making changes, you'll be redirected back to the dashboard
+              4. After making changes, you&apos;ll be redirected back to the dashboard
             </li>
           </ul>
         </div>

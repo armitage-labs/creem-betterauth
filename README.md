@@ -50,6 +50,7 @@ export const auth = betterAuth({
     creem({
       apiKey: process.env.CREEM_API_KEY,
       testMode: true, // Use test mode for development
+    }),
   ],
 });
 ```
@@ -73,6 +74,7 @@ export const auth = betterAuth({
       apiKey: process.env.CREEM_API_KEY,
       webhookSecret: process.env.CREEM_WEBHOOK_SECRET,
       testMode: true, // Use test mode for development
+    }),
   ],
 });
 ```
@@ -237,6 +239,20 @@ https://your-domain.com/api/auth/creem/webhook
 
 3. (Optional) For local development and testing, use a tool like ngrok to expose your local server. Add the public ngrok URL to your Creem dashboard webhook settings.
 
+## 📂 Examples
+
+A runnable **Next.js example app** is included in [`examples/nextjs/`](./examples/nextjs). It demonstrates email/password auth, checkout, access checks, and the customer portal using SQLite — all wired up via pnpm workspaces so the plugin resolves from your local build automatically.
+
+```bash
+pnpm install && pnpm run build
+cd examples/nextjs
+cp .env.example .env.local  # fill in your Creem test API key
+pnpm migrate
+pnpm dev
+```
+
+See the [example README](./examples/nextjs/README.md) for full setup instructions.
+
 ## 💻 Usage
 
 ### Client-Side (Better Auth Endpoints)
@@ -282,7 +298,7 @@ export function SubscribeButton({ productId }: { productId: string }) {
       units: 1, // Optional, defaults to 1
       successUrl: "/pro-plan/thank-you", // Optional
       discountCode: "SUMMER2024", // Optional
-      metadata: { foo: "bar", icecream, "smooth" } // Optional: Arbitrary key-value pair you can set from your application
+      metadata: { foo: "bar", icecream: "smooth" } // Optional: Arbitrary key-value pair you can set from your application
     });
 
     if (data?.url) {
@@ -379,7 +395,7 @@ For example, if a user purchases a yearly plan and cancels after one month, this
 ```typescript
 const { data } = await authClient.creem.hasAccessGranted();
 
-if (data?.hasAccess) {
+if (data?.hasAccessGranted) {
   // User has active subscription
 }
 ```
@@ -561,11 +577,11 @@ export async function POST(req: Request) {
   const signature = req.headers.get("creem-signature");
 
   if (
-    !validateWebhookSignature(
+    !(await validateWebhookSignature(
       payload,
       signature,
       process.env.CREEM_WEBHOOK_SECRET!,
-    )
+    ))
   ) {
     return new Response("Invalid signature", { status: 401 });
   }
@@ -608,6 +624,7 @@ export const auth = betterAuth({
       apiKey: process.env.CREEM_API_KEY!,
       testMode: true, // Use test mode for development
       persistSubscriptions: true, // Enable database persistence (default: true)
+    }),
   ],
 });
 ```
@@ -633,9 +650,10 @@ When `persistSubscriptions: true`, the plugin creates these database tables:
 
 ### `user` Table Extension
 
-| Field             | Type   | Description                  |
-| ----------------- | ------ | ---------------------------- |
-| `creemCustomerId` | string | Links user to Creem customer |
+| Field             | Type    | Description                           |
+| ----------------- | ------- | ------------------------------------- |
+| `creemCustomerId` | string  | Links user to Creem customer          |
+| `hadTrial`        | boolean | Whether user has used a trial period  |
 
 
 ### API Mode
@@ -668,7 +686,8 @@ export const auth = betterAuth({
     creem({
       apiKey: process.env.CREEM_API_KEY!,
       testMode: true, // Use test mode for development
-      persistSubscriptions: false, // Enable database persistence (default: true)
+      persistSubscriptions: false, // Disable database persistence
+    }),
   ],
 });
 ```
@@ -874,6 +893,44 @@ CREEM_API_KEY=your_api_key_here
 CREEM_WEBHOOK_SECRET=your_webhook_secret_here
 ```
 
+## 🐛 Debug Logging
+
+The plugin uses Better Auth's built-in logger with the `[creem]` prefix for all log messages. To enable debug-level logging, set the `logger.level` option in your Better Auth configuration:
+
+```typescript
+export const auth = betterAuth({
+  database: {
+    // your database config
+  },
+  logger: {
+    level: "debug", // Enable debug logging
+  },
+  plugins: [
+    creem({
+      apiKey: process.env.CREEM_API_KEY!,
+      webhookSecret: process.env.CREEM_WEBHOOK_SECRET,
+      persistSubscriptions: true,
+    }),
+  ],
+});
+```
+
+**Log levels:**
+
+| Level   | What it shows                                                              |
+| ------- | -------------------------------------------------------------------------- |
+| `error` | Failures in webhook processing, subscription updates, and API calls        |
+| `warn`  | Missing configuration (API key, referenceId), user not found               |
+| `info`  | Successful operations (subscription created/updated, user linked, access changes) |
+| `debug` | Detailed flow tracing (subscription lookups, access check decisions)        |
+
+All log messages are prefixed with `[creem]` so you can easily filter them:
+
+```bash
+# Filter creem logs in your application output
+your-app 2>&1 | grep "\[creem\]"
+```
+
 ## 🔧 Troubleshooting
 
 ### Webhook Issues
@@ -919,6 +976,7 @@ Either enable database mode or implement custom logic with the Creem SDK directl
 
 ## 📖 Additional Resources
 
+- [Next.js Example App](./examples/nextjs) — Runnable example with email/password auth, checkout, and portal
 - [Creem Documentation](https://docs.creem.io)
 - [Better-Auth Documentation](https://better-auth.com)
 - [GitHub Repository](https://github.com/armitage-labs/creem-betterauth)

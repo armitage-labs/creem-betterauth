@@ -1,93 +1,68 @@
 # Next.js Example
 
-This directory will contain a complete Next.js example using the Creem Better-Auth plugin.
+A minimal Next.js App Router example using the `@creem_io/better-auth` plugin with SQLite and email/password auth.
 
-## Coming Soon
+## Setup
 
-We're working on providing comprehensive examples including:
+This example uses **pnpm workspaces** so the plugin resolves from the local build automatically.
 
-- App Router setup with Server Components
-- Client-side checkout flow
-- Server Actions for subscription management
-- Middleware for access control
-- Webhook handling
-- Database persistence examples
+### 1. Install dependencies (from repo root)
 
-## Quick Preview
-
-### Server Setup
-
-```typescript
-// lib/auth.ts
-import { betterAuth } from "better-auth";
-import { creem } from "@creem_io/better-auth";
-
-export const auth = betterAuth({
-  database: {
-    provider: "pg",
-    url: process.env.DATABASE_URL!
-  },
-  plugins: [
-    creem({
-      apiKey: process.env.CREEM_API_KEY!,
-      testMode: true,
-      defaultSuccessUrl: "/success",
-      persistSubscriptions: true,
-      onGrantAccess: async ({ customer, metadata }) => {
-        // Grant user access
-      }
-    })
-  ]
-});
+```bash
+pnpm install
 ```
 
-### Client Usage
+### 2. Build the plugin
 
-```typescript
-// components/subscribe-button.tsx
-"use client";
-
-import { authClient } from "@/lib/auth-client";
-
-export function SubscribeButton({ productId }: { productId: string }) {
-  const handleSubscribe = async () => {
-    const { data } = await authClient.creem.createCheckout({
-      productId,
-      successUrl: "/success"
-    });
-    
-    if (data?.url) {
-      window.location.href = data.url;
-    }
-  };
-  
-  return <button onClick={handleSubscribe}>Subscribe</button>;
-}
+```bash
+pnpm run build
 ```
 
-### Server Component
+### 3. Configure environment
 
-```typescript
-// app/dashboard/page.tsx
-import { checkSubscriptionAccess } from "@creem_io/better-auth/server";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-
-export default async function DashboardPage() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  
-  const status = await checkSubscriptionAccess(
-    { apiKey: process.env.CREEM_API_KEY!, testMode: true },
-    { database: auth.options.database, userId: session.user.id }
-  );
-  
-  if (!status.hasAccess) redirect('/subscribe');
-  
-  return <Dashboard />;
-}
+```bash
+cd examples/nextjs
+cp .env.example .env.local
 ```
 
-## Contributing
+Edit `.env.local` and fill in your Creem test API key. You can get one from [creem.io](https://creem.io).
 
-Want to help create this example? Check out [CONTRIBUTING.md](../../CONTRIBUTING.md)!
+### 4. Run database migrations
 
+```bash
+pnpm migrate
+```
+
+### 5. Start the dev server
+
+```bash
+# From repo root:
+pnpm --filter examples-nextjs dev
+
+# Or from this directory:
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Usage
+
+1. **Sign up** with an email and password
+2. **Check access** to see your current subscription status
+3. **Checkout** to start a subscription (replace `prod_REPLACE_ME` in `page.tsx` with your Creem product ID)
+4. After payment, the **success page** confirms your purchase
+5. Use the **Customer Portal** to manage your subscription
+
+## Project Structure
+
+```
+src/
+  lib/
+    auth.ts          # Server-side Better-Auth config with Creem plugin
+    auth-client.ts   # Client-side auth client with Creem client plugin
+  app/
+    layout.tsx       # Root layout
+    page.tsx         # Home page (auth forms + dashboard)
+    success/page.tsx # Post-checkout success page
+    api/auth/[...all]/route.ts  # Better-Auth API handler
+```

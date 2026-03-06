@@ -13,7 +13,6 @@ export interface RetrieveSubscriptionInput {
    * The subscription ID to retrieve.
    * You can get this from webhook events or from your database.
    *
-   * @required
    * @example "sub_abc123"
    */
   id: string;

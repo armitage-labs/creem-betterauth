@@ -1,4 +1,5 @@
 import { Creem } from "creem";
+import { logger } from "better-auth";
 import type { CreemOptions } from "./types.js";
 import type { CreateCheckoutInput, CreateCheckoutResponse } from "./checkout-types.js";
 import type { CreatePortalResponse } from "./portal-types.js";
@@ -222,7 +223,11 @@ export async function createCheckout(
   });
 
   return {
-    url: checkout.checkoutUrl || "",
+    url:
+      checkout.checkoutUrl ??
+      (() => {
+        throw new Error("Creem API returned no checkout URL");
+      })(),
     redirect: true,
   };
 }
@@ -492,6 +497,9 @@ export async function checkSubscriptionAccess(
   productName?: string;
 }> {
   // Database mode
+  // TODO: This uses a raw query builder API (select/from/where) that may not match
+  // all Better Auth database adapters. For reliable access checks, prefer the
+  // `hasAccessGranted` Better Auth endpoint which uses the adapter correctly.
   if (options.database && options.userId) {
     try {
       const subscriptions = await options.database
@@ -516,19 +524,16 @@ export async function checkSubscriptionAccess(
 
       return { hasAccess: false };
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`[creem] Failed to check subscription access (database mode): ${message}`);
       // Fall through to API check
     }
   }
 
   // API mode
   if (options.customerId) {
-    try {
-      // Note: The Creem SDK doesn't have a direct searchSubscriptions method.
-      // You'll need to retrieve subscriptions by other means or use the database mode.
-      return { hasAccess: false };
-    } catch (error) {
-      return { hasAccess: false };
-    }
+    // API mode not yet supported — use database mode for access checks
+    return { hasAccess: false };
   }
 
   return { hasAccess: false };
@@ -574,6 +579,7 @@ export async function getActiveSubscriptions(
   }>
 > {
   // Database mode
+  // TODO: Same raw query builder caveat as checkSubscriptionAccess above.
   if (options.database && options.userId) {
     try {
       const subscriptions = await options.database
@@ -593,19 +599,16 @@ export async function getActiveSubscriptions(
           periodEnd: sub.periodEnd ? new Date(sub.periodEnd) : undefined,
         }));
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`[creem] Failed to get active subscriptions (database mode): ${message}`);
       return [];
     }
   }
 
   // API mode
   if (options.customerId) {
-    try {
-      // Note: The Creem SDK doesn't have a direct searchSubscriptions method.
-      // You'll need to retrieve subscriptions by other means or use the database mode.
-      return [];
-    } catch (error) {
-      return [];
-    }
+    // API mode not yet supported — use database mode for subscription queries
+    return [];
   }
 
   return [];

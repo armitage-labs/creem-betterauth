@@ -24,6 +24,8 @@
     "test",
     "dist",
     "examples",
+    "src/__tests__",
+    "src/__integration__",
     "**/*.d.ts"
   ]
 }
