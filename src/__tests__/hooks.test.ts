@@ -279,7 +279,7 @@ describe("updateSubscriptionFromEvent (via subscription hooks)", () => {
     );
   });
 
-  it("onSubscriptionExpired maps to unpaid status", async () => {
+  it("onSubscriptionExpired sets status to expired", async () => {
     const adapter = createMockAdapter();
     adapter.findOne.mockResolvedValue(mockDbSubscription);
 
@@ -287,7 +287,7 @@ describe("updateSubscriptionFromEvent (via subscription hooks)", () => {
     await onSubscriptionExpired(ctx, mockSubscriptionExpiredEvent, defaultOptions);
     expect(adapter.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        update: expect.objectContaining({ status: "unpaid" }),
+        update: expect.objectContaining({ status: "expired" }),
       }),
     );
   });
@@ -468,7 +468,7 @@ describe("Directly tested subscription event hooks", () => {
     await onSubscriptionPastDue(ctx, event, defaultOptions);
     expect(adapter.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        update: expect.objectContaining({ status: "unpaid" }),
+        update: expect.objectContaining({ status: "past_due" }),
       }),
     );
   });

@@ -78,16 +78,14 @@ describe("creem plugin", () => {
   });
 
   it("warns when API key is missing", async () => {
-    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { logger } = await import("better-auth");
     creem({ ...defaultOptions, apiKey: "" });
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("API key is not set"));
-    consoleSpy.mockRestore();
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("API key is not set"));
   });
 
   it("does not warn when API key is set", async () => {
-    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { logger } = await import("better-auth");
     creem(defaultOptions);
-    expect(consoleSpy).not.toHaveBeenCalled();
-    consoleSpy.mockRestore();
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 });
