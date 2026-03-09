@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Added ownership validation to `createCheckout` endpoint; supplied `customer.id` must match session or be rejected.
+- Documented webhook callback signature change (context argument moved first) with migration notes; updated all code examples and JSDoc accordingly.
+- Noted breaking field rename (`next_billing_date` → `next_transaction_date`) in documentation and examples.
+- Added `@see` references for aliased SDK types to recover lost JSDoc information.
+- Fixed numerous documentation examples (README, BETTERAUTH.md, ARCHITECTURE.md, quick start guides, and example/test docs) to use the new ctx‑first callback signature.
+- Major v2 upgrade: dependency bumps, TypeScript configuration improvements, security checks, and various internal refactors across multiple modules.
 - Improved developer experience: Plugin now logs a warning instead of throwing a fatal error when Creem API key is missing during initialization
 - API endpoints (`createCheckout`, `createPortal`, `cancelSubscription`, `retrieveSubscription`, `searchTransactions`) now return clear error messages when called without an API key configured
 - Projects can now run without a Creem API key until Creem functionality is actually used, improving developer velocity

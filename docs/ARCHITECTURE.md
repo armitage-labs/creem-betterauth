@@ -405,10 +405,10 @@ const subscriptions = await creem.searchSubscriptions({
 
 ```typescript
 creem({
-  onCheckoutCompleted: async (data) => {
+  onCheckoutCompleted: async (ctx, data) => {
     // Custom logic
   },
-  onSubscriptionActive: async (data) => {
+  onSubscriptionActive: async (ctx, data) => {
     // Custom logic
   }
 })

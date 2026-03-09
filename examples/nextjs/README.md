@@ -33,7 +33,7 @@ export const auth = betterAuth({
       testMode: true,
       defaultSuccessUrl: "/success",
       persistSubscriptions: true,
-      onGrantAccess: async ({ customer, metadata }) => {
+      onGrantAccess: async (ctx, { customer, metadata }) => {
         // Grant user access
       }
     })

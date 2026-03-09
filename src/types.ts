@@ -138,7 +138,8 @@ export interface CreemOptions {
    * { webhookEventType, webhookId, webhookCreatedAt, order, product, customer, subscription, status, ... }
    *
    * @example
-   * onCheckoutCompleted: async ({ webhookEventType, product, customer, order, subscription }) => {
+   * onCheckoutCompleted: async (ctx, { webhookEventType, product, customer, order, subscription }) => {
+   *   // ctx is the BetterAuth endpoint context, useful for logging/response
    *   console.log(`Checkout completed: ${customer?.email} purchased ${product.name}`);
    * }
 +
@@ -180,7 +181,7 @@ export interface CreemOptions {
    * { webhookEventType, webhookId, webhookCreatedAt, product, customer, status, metadata, ... }
    *
    * @example
-   * onSubscriptionActive: async ({ product, customer, status }) => {
+   * onSubscriptionActive: async (ctx, { product, customer, status }) => {
    *   console.log(`${customer.email} subscribed to ${product.name}`);
    * }
 +
@@ -281,7 +282,7 @@ export interface CreemOptions {
    * Implement this as an idempotent operation (safe to call repeatedly).
    *
    * @example
-   * onGrantAccess: async ({ reason, product, customer, metadata }) => {
+   * onGrantAccess: async (ctx, { reason, product, customer, metadata }) => {
    *   const userId = metadata?.referenceId as string;
    *   console.log(`Granting ${reason} to ${customer.email} for ${product.name}`);
    *   // Your database logic here
@@ -303,7 +304,7 @@ export interface CreemOptions {
    * Implement this as an idempotent operation (safe to call repeatedly).
    *
    * @example
-   * onRevokeAccess: async ({ reason, product, customer, metadata }) => {
+   * onRevokeAccess: async (ctx, { reason, product, customer, metadata }) => {
    *   const userId = metadata?.referenceId as string;
    *   console.log(`Revoking access (${reason}) from ${customer.email}`);
    *   // Your database logic here

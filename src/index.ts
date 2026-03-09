@@ -98,10 +98,10 @@ export {
  *       apiKey: process.env.CREEM_API_KEY!,
  *       testMode: true,
  *       defaultSuccessUrl: "/success",
- *       onGrantAccess: async ({ customer, product, metadata }) => {
+ *       onGrantAccess: async (ctx, { customer, product, metadata }) => {
  *         // Grant user access to your platform
  *       },
- *       onRevokeAccess: async ({ customer, product, metadata }) => {
+ *       onRevokeAccess: async (ctx, { customer, product, metadata }) => {
  *         // Revoke user access
  *       }
  *     })
