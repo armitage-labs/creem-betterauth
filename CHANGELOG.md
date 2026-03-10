@@ -1,3 +1,11 @@
+## [1.0.2](https://github.com/armitage-labs/creem-betterauth/compare/v1.0.1...v1.0.2) (2026-03-06)
+
+
+### Bug Fixes
+
+* move creem SDK from peerDependencies to dependencies ([edef72c](https://github.com/armitage-labs/creem-betterauth/commit/edef72cb7203410b228201ffe529a2bfe4470126))
+* update lockfile for creem as regular dependency ([13a51fd](https://github.com/armitage-labs/creem-betterauth/commit/13a51fd8abb5342063375ac86037d1e9dcd5cf23))
+
 ## [1.0.1](https://github.com/armitage-labs/creem-betterauth/compare/v1.0.0...v1.0.1) (2026-03-06)
 
 
