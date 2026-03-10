@@ -58,7 +58,9 @@ export interface SubscriptionData {
   /** Object type */
   object: "subscription";
   /** The product associated with the subscription (ID or expanded object) */
-  product: { id: string; name: string; price: number; currency: string; [key: string]: unknown } | string;
+  product:
+    | { id: string; name: string; price: number; currency: string; [key: string]: unknown }
+    | string;
   /** The customer associated with the subscription (ID or expanded object) */
   customer: { id: string; email: string; name?: string; [key: string]: unknown } | string;
   /** Subscription items */

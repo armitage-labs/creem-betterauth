@@ -812,17 +812,13 @@ describe("Checkout endpoint - customFields", () => {
     });
     mockGetSession.mockResolvedValue({ user: { id: "u1", email: "t@e.com" } });
     await handler(ctx);
-    expect(creem.checkouts.create).toHaveBeenCalledWith(
-      expect.objectContaining({ customFields }),
-    );
+    expect(creem.checkouts.create).toHaveBeenCalledWith(expect.objectContaining({ customFields }));
   });
 
   it("passes deprecated customField through as customFields", async () => {
     const creem = createMockCreem() as any;
     const handler = createCheckoutEndpoint(creem, defaultOptions);
-    const customField = [
-      { type: "checkbox", key: "terms", label: "Accept Terms" },
-    ];
+    const customField = [{ type: "checkbox", key: "terms", label: "Accept Terms" }];
     const ctx = createMockContext({
       body: { productId: "prod_1", customField },
     });
@@ -836,37 +832,41 @@ describe("Checkout endpoint - customFields", () => {
   it("prefers customFields over customField when both provided", async () => {
     const creem = createMockCreem() as any;
     const handler = createCheckoutEndpoint(creem, defaultOptions);
-    const customFields = [
-      { type: "text", key: "company", label: "Company" },
-    ];
-    const customField = [
-      { type: "checkbox", key: "terms", label: "Terms" },
-    ];
+    const customFields = [{ type: "text", key: "company", label: "Company" }];
+    const customField = [{ type: "checkbox", key: "terms", label: "Terms" }];
     const ctx = createMockContext({
       body: { productId: "prod_1", customFields, customField },
     });
     mockGetSession.mockResolvedValue({ user: { id: "u1", email: "t@e.com" } });
     await handler(ctx);
-    expect(creem.checkouts.create).toHaveBeenCalledWith(
-      expect.objectContaining({ customFields }),
-    );
+    expect(creem.checkouts.create).toHaveBeenCalledWith(expect.objectContaining({ customFields }));
   });
 
   it("passes customFields with text and checkbox config correctly", async () => {
     const creem = createMockCreem() as any;
     const handler = createCheckoutEndpoint(creem, defaultOptions);
     const customFields = [
-      { type: "text", key: "name", label: "Full Name", optional: false, text: { minLength: 2, maxLength: 100 } },
-      { type: "checkbox", key: "newsletter", label: "Subscribe", optional: true, checkbox: { label: "Yes, subscribe me" } },
+      {
+        type: "text",
+        key: "name",
+        label: "Full Name",
+        optional: false,
+        text: { minLength: 2, maxLength: 100 },
+      },
+      {
+        type: "checkbox",
+        key: "newsletter",
+        label: "Subscribe",
+        optional: true,
+        checkbox: { label: "Yes, subscribe me" },
+      },
     ];
     const ctx = createMockContext({
       body: { productId: "prod_1", customFields },
     });
     mockGetSession.mockResolvedValue({ user: { id: "u1", email: "t@e.com" } });
     await handler(ctx);
-    expect(creem.checkouts.create).toHaveBeenCalledWith(
-      expect.objectContaining({ customFields }),
-    );
+    expect(creem.checkouts.create).toHaveBeenCalledWith(expect.objectContaining({ customFields }));
   });
 
   it("does not include customFields when not provided", async () => {

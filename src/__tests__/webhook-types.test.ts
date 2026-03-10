@@ -12,11 +12,7 @@ import {
   isTransactionEntity,
   isDiscountEntity,
 } from "../webhook-types.js";
-import type {
-  ProductEntity,
-  DiscountEntity,
-  DiscountStatus,
-} from "../webhook-types.js";
+import type { ProductEntity, DiscountEntity, DiscountStatus } from "../webhook-types.js";
 import {
   mockCustomer,
   mockProduct,

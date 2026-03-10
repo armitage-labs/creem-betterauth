@@ -309,7 +309,9 @@ export interface ProductFeatureEntity {
   /** Private note from the seller, visible to customer after purchase */
   private_note?: string | null;
   /** File feature data containing downloadable files */
-  file?: { files: { id: string; file_name: string; url: string; type: string; size: number }[] } | null;
+  file?: {
+    files: { id: string; file_name: string; url: string; type: string; size: number }[];
+  } | null;
   /** License key issued for the order */
   license_key?: LicenseEntity | null;
   /**
