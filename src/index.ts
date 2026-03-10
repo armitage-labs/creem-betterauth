@@ -92,10 +92,10 @@ export {
  *       apiKey: process.env.CREEM_API_KEY!,
  *       testMode: true,
  *       defaultSuccessUrl: "/success",
- *       onGrantAccess: async ({ customer, product, metadata }) => {
+ *       onGrantAccess: async (ctx, { customer, product, metadata }) => {
  *         // Grant user access to your platform
  *       },
- *       onRevokeAccess: async ({ customer, product, metadata }) => {
+ *       onRevokeAccess: async (ctx, { customer, product, metadata }) => {
  *         // Revoke user access
  *       }
  *     })
@@ -103,8 +103,10 @@ export {
  * });
  * ```
  */
-export const creem = (options: CreemOptions) => {
-  const serverURL = options.testMode ? "https://test-api.creem.io" : "https://api.creem.io";
+export const creem = <T extends CreemOptions>(options: T) => {
+  const serverURL = options.testMode
+    ? "https://test-api.creem.io"
+    : "https://api.creem.io";
 
   const creem = new Creem({
     apiKey: options.apiKey,

@@ -1,3 +1,5 @@
+import type { SubscriptionEntity$Outbound } from "creem/models/components";
+
 /**
  * Parameters for retrieving a Creem subscription.
  *
@@ -20,60 +22,8 @@ export interface RetrieveSubscriptionInput {
 
 /**
  * Creem subscription object returned from the API.
+ *
+ * @see SubscriptionEntity$Outbound This alias is offered for convenience,
+ * but the original Creem JSDoc is not preserved when the type is re-exported here.
  */
-export interface SubscriptionData {
-  /**
-   * Unique subscription identifier
-   */
-  id: string;
-
-  /**
-   * Current subscription status
-   * @example "active", "paused", "canceled", "expired"
-   */
-  status: string;
-
-  /**
-   * Product information
-   */
-  product: {
-    id: string;
-    name: string;
-    price: number;
-    currency: string;
-  };
-
-  /**
-   * Customer information
-   */
-  customer: {
-    id: string;
-    email: string;
-    name?: string;
-  };
-
-  /**
-   * Current billing period end date (Unix timestamp)
-   */
-  current_period_end_date?: number;
-
-  /**
-   * Next billing date (Unix timestamp)
-   */
-  next_billing_date?: number;
-
-  /**
-   * Subscription creation date (Unix timestamp)
-   */
-  created_at: number;
-
-  /**
-   * Custom metadata stored with the subscription
-   */
-  metadata?: Record<string, unknown>;
-
-  /**
-   * Additional subscription properties from Creem API
-   */
-  [key: string]: unknown;
-}
+export type SubscriptionData = SubscriptionEntity$Outbound;

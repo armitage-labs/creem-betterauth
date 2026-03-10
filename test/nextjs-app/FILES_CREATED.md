@@ -143,11 +143,11 @@ creemClient.hasAccessGranted()
 ### Server Callbacks Implemented
 
 ```typescript
-onGrantAccess: async (context) => {
+onGrantAccess: async (ctx, data) => {
   // Handles: checkout.completed, subscription.updated
 }
 
-onRevokeAccess: async (context) => {
+onRevokeAccess: async (ctx, data) => {
   // Handles: subscription.cancelled, refund.created
 }
 ```

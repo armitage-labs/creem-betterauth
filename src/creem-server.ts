@@ -1,6 +1,5 @@
-import { Creem } from "creem";
 import { logger } from "better-auth";
-import type { CreemOptions } from "./types.js";
+import { Creem } from "creem";
 import type { CreateCheckoutInput, CreateCheckoutResponse } from "./checkout-types.js";
 import type { CreatePortalResponse } from "./portal-types.js";
 import type { SubscriptionData } from "./retrieve-subscription-types.js";
@@ -72,7 +71,9 @@ export function isActiveSubscription(status: string): boolean {
  * ```typescript
  * import { formatCreemDate } from "@creem_io/better-auth/server";
  *
- * const renewalDate = formatCreemDate(subscription.next_billing_date);
+ * // breaking change: field was renamed from next_billing_date ->
+ * // next_transaction_date
+ * const renewalDate = formatCreemDate(subscription.next_transaction_date);
  * console.log(renewalDate.toLocaleDateString());
  * ```
  */
@@ -198,6 +199,7 @@ export async function createCheckout(
      * @since 1.1.0
      */
     skipTrial?: boolean;
+    redirect?: boolean;
   },
 ): Promise<CreateCheckoutResponse> {
   if (!config.apiKey) {
@@ -222,13 +224,14 @@ export async function createCheckout(
     },
   });
 
+  const checkoutUrl = checkout.checkoutUrl;
+  if (!checkoutUrl) {
+    throw new Error("Creem API returned no checkout URL");
+  }
+
   return {
-    url:
-      checkout.checkoutUrl ??
-      (() => {
-        throw new Error("Creem API returned no checkout URL");
-      })(),
-    redirect: true,
+    url: checkoutUrl,
+    redirect: !!input.redirect,
   };
 }
 
@@ -237,7 +240,7 @@ export async function createCheckout(
  * Useful in Server Components, Server Actions, or custom API routes.
  *
  * @param config - Creem configuration
- * @param customerId - Creem customer ID
+ * @param input - Portal request parameters
  * @returns Portal URL and redirect flag
  *
  * @example
@@ -255,7 +258,7 @@ export async function createCheckout(
  *         apiKey: process.env.CREEM_API_KEY!,
  *         testMode: true
  *       },
- *       session.user.creemCustomerId
+ *       { customerId: session.user.creemCustomerId }
  *     );
  *     redirect(url);
  *   }
@@ -266,7 +269,10 @@ export async function createCheckout(
  */
 export async function createPortal(
   config: CreemServerConfig,
-  customerId: string,
+  input: {
+    customerId: string;
+    redirect?: boolean;
+  },
 ): Promise<CreatePortalResponse> {
   if (!config.apiKey) {
     throw new Error(
@@ -277,12 +283,16 @@ export async function createPortal(
   const creem = createCreemClient(config);
 
   const portal = await creem.customers.generateBillingLinks({
-    customerId,
+    customerId: input.customerId,
   });
+
+  if (!portal.customerPortalLink) {
+    throw new Error("Creem API returned no customer portal URL");
+  }
 
   return {
     url: portal.customerPortalLink,
-    redirect: true,
+    redirect: !!input.redirect,
   };
 }
 
