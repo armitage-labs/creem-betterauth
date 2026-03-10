@@ -170,10 +170,23 @@ describe("createCheckout", () => {
         productId: "prod_1",
         customer: { email: "test@example.com" },
         successUrl: "https://example.com/success",
+        redirect: true,
       },
     );
     expect(result.url).toBeDefined();
     expect(result.redirect).toBe(true);
+  });
+
+  it("defaults redirect to false when omitted", async () => {
+    const result = await createCheckout(
+      { apiKey: "test_key", testMode: true },
+      {
+        productId: "prod_1",
+        customer: { email: "test@example.com" },
+      },
+    );
+    expect(result.url).toBeDefined();
+    expect(result.redirect).toBe(false);
   });
 
   it("includes skipTrial in metadata when set", async () => {
@@ -184,6 +197,7 @@ describe("createCheckout", () => {
         productId: "prod_1",
         customer: { email: "test@example.com" },
         skipTrial: true,
+        redirect: true,
       },
     );
     expect(result.redirect).toBe(true);
@@ -192,15 +206,27 @@ describe("createCheckout", () => {
 
 describe("createPortal", () => {
   it("throws on missing API key", async () => {
-    await expect(createPortal({ apiKey: "" }, "cust_1")).rejects.toThrow(
+    await expect(createPortal({ apiKey: "" }, { customerId: "cust_1" })).rejects.toThrow(
       "Creem API key is not configured",
     );
   });
 
   it("returns portal URL on success", async () => {
-    const result = await createPortal({ apiKey: "test_key", testMode: true }, "cust_1");
+    const result = await createPortal(
+      { apiKey: "test_key", testMode: true },
+      { customerId: "cust_1", redirect: true },
+    );
     expect(result.url).toBeDefined();
     expect(result.redirect).toBe(true);
+  });
+
+  it("defaults redirect to false when omitted", async () => {
+    const result = await createPortal(
+      { apiKey: "test_key", testMode: true },
+      { customerId: "cust_1" },
+    );
+    expect(result.url).toBeDefined();
+    expect(result.redirect).toBe(false);
   });
 });
 

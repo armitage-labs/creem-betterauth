@@ -113,7 +113,7 @@ describe("Checkout endpoint", () => {
   it("returns checkout URL on success", async () => {
     const creem = createMockCreem() as any;
     const handler = createCheckoutEndpoint(creem, defaultOptions);
-    const ctx = createMockContext({ body: { productId: "prod_1" } });
+    const ctx = createMockContext({ body: { productId: "prod_1", redirect: true } });
     mockGetSession.mockResolvedValue({ user: { id: "u1", email: "t@e.com" } });
     await handler(ctx);
     expect(ctx.json).toHaveBeenCalledWith(
@@ -121,6 +121,46 @@ describe("Checkout endpoint", () => {
         url: "https://checkout.creem.io/test-session",
         redirect: true,
       }),
+    );
+  });
+
+  it("rejects a provided customer ID that does not match the session", async () => {
+    const creem = createMockCreem() as any;
+    const handler = createCheckoutEndpoint(creem, defaultOptions);
+    const ctx = createMockContext({
+      body: {
+        productId: "prod_1",
+        customer: { id: "cust_other" },
+      },
+    });
+    mockGetSession.mockResolvedValue({
+      user: { id: "user_1", email: "session@example.com", creemCustomerId: "cust_session" },
+    });
+    await handler(ctx);
+    expect(creem.checkouts.create).not.toHaveBeenCalled();
+    expect(ctx.json).toHaveBeenCalledWith(
+      expect.objectContaining({ error: "Provided customer ID does not match session" }),
+      { status: 400 },
+    );
+  });
+
+  it("rejects a provided customer ID when the session has no Creem customer ID", async () => {
+    const creem = createMockCreem() as any;
+    const handler = createCheckoutEndpoint(creem, defaultOptions);
+    const ctx = createMockContext({
+      body: {
+        productId: "prod_1",
+        customer: { id: "cust_other" },
+      },
+    });
+    mockGetSession.mockResolvedValue({
+      user: { id: "user_1", email: "session@example.com", creemCustomerId: null },
+    });
+    await handler(ctx);
+    expect(creem.checkouts.create).not.toHaveBeenCalled();
+    expect(ctx.json).toHaveBeenCalledWith(
+      expect.objectContaining({ error: "Cannot supply a customer ID without a session value" }),
+      { status: 400 },
     );
   });
 
@@ -187,7 +227,7 @@ describe("Portal endpoint", () => {
   it("returns portal URL on success", async () => {
     const creem = createMockCreem() as any;
     const handler = createPortalEndpoint(creem, defaultOptions);
-    const ctx = createMockContext();
+    const ctx = createMockContext({ body: { redirect: true } });
     mockGetSession.mockResolvedValue({
       user: { id: "u1", creemCustomerId: "cust_123" },
     });
@@ -196,6 +236,25 @@ describe("Portal endpoint", () => {
       expect.objectContaining({
         url: "https://portal.creem.io/test-portal",
         redirect: true,
+      }),
+    );
+  });
+
+  it("accepts a matching customerId override from the request body", async () => {
+    const creem = createMockCreem() as any;
+    const handler = createPortalEndpoint(creem, defaultOptions);
+    const ctx = createMockContext({ body: { customerId: "cust_123" } });
+    mockGetSession.mockResolvedValue({
+      user: { id: "u1", creemCustomerId: "cust_123" },
+    });
+    await handler(ctx);
+    expect(creem.customers.generateBillingLinks).toHaveBeenCalledWith({
+      customerId: "cust_123",
+    });
+    expect(ctx.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: "https://portal.creem.io/test-portal",
+        redirect: false,
       }),
     );
   });
@@ -278,9 +337,64 @@ describe("Cancel subscription endpoint", () => {
     const creem = createMockCreem() as any;
     const handler = createCancelSubscriptionEndpoint(creem, optionsNoPersist);
     const ctx = createMockContext({ body: { id: "sub_explicit" } });
-    mockGetSession.mockResolvedValue({ user: { id: "user_123" } });
+    mockGetSession.mockResolvedValue({
+      user: { id: "user_123", creemCustomerId: "cust_test_123" },
+    });
     await handler(ctx);
     expect(creem.subscriptions.cancel).toHaveBeenCalledWith("sub_explicit", {});
+  });
+
+  it("requires a Creem customer ID when persistence is disabled", async () => {
+    const creem = createMockCreem() as any;
+    const handler = createCancelSubscriptionEndpoint(creem, optionsNoPersist);
+    const ctx = createMockContext({ body: { id: "sub_explicit" } });
+    mockGetSession.mockResolvedValue({ user: { id: "user_123", creemCustomerId: null } });
+    await handler(ctx);
+    expect(creem.subscriptions.get).not.toHaveBeenCalled();
+    expect(creem.subscriptions.cancel).not.toHaveBeenCalled();
+    expect(ctx.json).toHaveBeenCalledWith(
+      expect.objectContaining({ error: "User must have a Creem customer ID" }),
+      { status: 400 },
+    );
+  });
+
+  it("rejects canceling a subscription that does not belong to the authenticated user", async () => {
+    const creem = createMockCreem() as any;
+    creem.subscriptions.get.mockResolvedValueOnce({
+      id: "sub_explicit",
+      status: "active",
+      customer: { id: "cust_other" },
+      metadata: { referenceId: "user_other" },
+    });
+    const handler = createCancelSubscriptionEndpoint(creem, optionsNoPersist);
+    const ctx = createMockContext({ body: { id: "sub_explicit" } });
+    mockGetSession.mockResolvedValue({
+      user: { id: "user_123", creemCustomerId: "cust_test_123" },
+    });
+    await handler(ctx);
+    expect(creem.subscriptions.cancel).not.toHaveBeenCalled();
+    expect(ctx.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: "Subscription does not belong to the authenticated user",
+      }),
+      { status: 403 },
+    );
+  });
+
+  it("returns 404 when the subscription cannot be found before canceling", async () => {
+    const creem = createMockCreem() as any;
+    creem.subscriptions.get.mockRejectedValueOnce(new Error("missing"));
+    const handler = createCancelSubscriptionEndpoint(creem, optionsNoPersist);
+    const ctx = createMockContext({ body: { id: "sub_explicit" } });
+    mockGetSession.mockResolvedValue({
+      user: { id: "user_123", creemCustomerId: "cust_test_123" },
+    });
+    await handler(ctx);
+    expect(creem.subscriptions.cancel).not.toHaveBeenCalled();
+    expect(ctx.json).toHaveBeenCalledWith(
+      expect.objectContaining({ error: "Subscription not found" }),
+      { status: 404 },
+    );
   });
 });
 
@@ -325,6 +439,56 @@ describe("Retrieve subscription endpoint", () => {
         error: expect.stringContaining("Subscription ID is required"),
       }),
       { status: 400 },
+    );
+  });
+
+  it("requires a Creem customer ID before retrieving when persistence is disabled", async () => {
+    const creem = createMockCreem() as any;
+    const handler = createRetrieveSubscriptionEndpoint(creem, optionsNoPersist);
+    const ctx = createMockContext({ body: { id: "sub_explicit" } });
+    mockGetSession.mockResolvedValue({ user: { id: "user_123", creemCustomerId: null } });
+    await handler(ctx);
+    expect(creem.subscriptions.get).not.toHaveBeenCalled();
+    expect(ctx.json).toHaveBeenCalledWith(
+      expect.objectContaining({ error: "User must have a Creem customer ID" }),
+      { status: 400 },
+    );
+  });
+
+  it("rejects retrieving a subscription that does not belong to the authenticated user", async () => {
+    const creem = createMockCreem() as any;
+    creem.subscriptions.get.mockResolvedValueOnce({
+      id: "sub_explicit",
+      status: "active",
+      customer: { id: "cust_other" },
+      metadata: { referenceId: "user_other" },
+    });
+    const handler = createRetrieveSubscriptionEndpoint(creem, optionsNoPersist);
+    const ctx = createMockContext({ body: { id: "sub_explicit" } });
+    mockGetSession.mockResolvedValue({
+      user: { id: "user_123", creemCustomerId: "cust_test_123" },
+    });
+    await handler(ctx);
+    expect(ctx.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: "Subscription does not belong to the authenticated user",
+      }),
+      { status: 403 },
+    );
+  });
+
+  it("returns 404 when the subscription cannot be found before retrieval", async () => {
+    const creem = createMockCreem() as any;
+    creem.subscriptions.get.mockRejectedValueOnce(new Error("missing"));
+    const handler = createRetrieveSubscriptionEndpoint(creem, optionsNoPersist);
+    const ctx = createMockContext({ body: { id: "sub_explicit" } });
+    mockGetSession.mockResolvedValue({
+      user: { id: "user_123", creemCustomerId: "cust_test_123" },
+    });
+    await handler(ctx);
+    expect(ctx.json).toHaveBeenCalledWith(
+      expect.objectContaining({ error: "Subscription not found" }),
+      { status: 404 },
     );
   });
 });
@@ -393,6 +557,21 @@ describe("Search transactions endpoint", () => {
       expect.objectContaining({
         transactions: expect.any(Array),
       }),
+    );
+  });
+
+  it("rejects an explicit customerId that does not match the authenticated user", async () => {
+    const creem = createMockCreem() as any;
+    const handler = createSearchTransactionsEndpoint(creem, defaultOptions);
+    const ctx = createMockContext({ body: { customerId: "cust_other" } });
+    mockGetSession.mockResolvedValue({
+      user: { id: "u1", creemCustomerId: "cust_session" },
+    });
+    await handler(ctx);
+    expect(creem.transactions.search).not.toHaveBeenCalled();
+    expect(ctx.json).toHaveBeenCalledWith(
+      expect.objectContaining({ error: "Provided customerId does not match authenticated user" }),
+      { status: 403 },
     );
   });
 });
@@ -564,7 +743,9 @@ describe("Cancel subscription endpoint - SDK and adapter errors", () => {
     creem.subscriptions.cancel.mockRejectedValue(new Error("SDK cancel error"));
     const handler = createCancelSubscriptionEndpoint(creem, optionsNoPersist);
     const ctx = createMockContext({ body: { id: "sub_explicit" } });
-    mockGetSession.mockResolvedValue({ user: { id: "user_123" } });
+    mockGetSession.mockResolvedValue({
+      user: { id: "user_123", creemCustomerId: "cust_test_123" },
+    });
     await handler(ctx);
     expect(ctx.json).toHaveBeenCalledWith(
       expect.objectContaining({ error: "Failed to cancel subscription" }),
@@ -579,7 +760,9 @@ describe("Cancel subscription endpoint - SDK and adapter errors", () => {
     const creem = createMockCreem() as any;
     const handler = createCancelSubscriptionEndpoint(creem, optionsNoPersist);
     const ctx = createMockContext({ body: { id: "sub_explicit" } });
-    mockGetSession.mockResolvedValue({ user: { id: "user_123" } });
+    mockGetSession.mockResolvedValue({
+      user: { id: "user_123", creemCustomerId: "cust_test_123" },
+    });
     await handler(ctx);
     expect(creem.subscriptions.cancel).toHaveBeenCalledWith("sub_explicit", {});
   });
@@ -610,10 +793,19 @@ describe("Retrieve subscription endpoint - SDK and adapter errors", () => {
   it("returns 500 and logs error when SDK get throws", async () => {
     const { logger } = await import("better-auth");
     const creem = createMockCreem() as any;
-    creem.subscriptions.get.mockRejectedValue(new Error("SDK get error"));
+    creem.subscriptions.get
+      .mockResolvedValueOnce({
+        id: "sub_explicit",
+        status: "active",
+        customer: { id: "cust_test_123" },
+        metadata: { referenceId: "user_123" },
+      })
+      .mockRejectedValueOnce(new Error("SDK get error"));
     const handler = createRetrieveSubscriptionEndpoint(creem, optionsNoPersist);
     const ctx = createMockContext({ body: { id: "sub_explicit" } });
-    mockGetSession.mockResolvedValue({ user: { id: "user_123" } });
+    mockGetSession.mockResolvedValue({
+      user: { id: "user_123", creemCustomerId: "cust_test_123" },
+    });
     await handler(ctx);
     expect(ctx.json).toHaveBeenCalledWith(
       expect.objectContaining({ error: "Failed to retrieve subscription" }),
@@ -718,7 +910,7 @@ describe("Portal endpoint - customerId override", () => {
     vi.clearAllMocks();
   });
 
-  it("uses body.customerId when provided instead of session", async () => {
+  it("rejects body.customerId when it does not match session", async () => {
     const creem = createMockCreem() as any;
     const handler = createPortalEndpoint(creem, defaultOptions);
     const ctx = createMockContext({ body: { customerId: "cust_override" } });
@@ -726,9 +918,11 @@ describe("Portal endpoint - customerId override", () => {
       user: { id: "u1", creemCustomerId: "cust_session" },
     });
     await handler(ctx);
-    expect(creem.customers.generateBillingLinks).toHaveBeenCalledWith({
-      customerId: "cust_override",
-    });
+    expect(creem.customers.generateBillingLinks).not.toHaveBeenCalled();
+    expect(ctx.json).toHaveBeenCalledWith(
+      expect.objectContaining({ error: expect.stringContaining("does not match") }),
+      { status: 403 },
+    );
   });
 });
 
