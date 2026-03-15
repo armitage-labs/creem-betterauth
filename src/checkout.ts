@@ -148,7 +148,8 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
         units: body.units,
         discountCode: body.discountCode,
         customer,
-        // TODO: Implement proper customField handling once Creem SDK supports it
+        // Prefer the newer `customFields` field, but support the deprecated `customField` too.
+        customFields: body.customFields ?? body.customField,
         successUrl: resolveSuccessUrl(body.successUrl || options.defaultSuccessUrl, ctx),
         metadata: {
           ...(body.metadata || {}),

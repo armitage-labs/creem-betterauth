@@ -124,7 +124,11 @@ export interface CreateCheckoutInput {
    * ]
    * ```
    */
-  customField?: CustomFieldRequestEntity[];
+  customFields?: CustomFieldRequestEntity[];
+
+  /**
+   * @deprecated Use `customFields` instead.
+   */  customField?: CustomFieldRequestEntity[];
 
   /**
    * URL to redirect to after successful checkout.
