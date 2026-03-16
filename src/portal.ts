@@ -54,7 +54,7 @@ const createPortalHandler = (creem: Creem, options: CreemOptions) => {
         );
       }
 
-          logger.debug(`[creem] Portal: customer=${customerId}`);
+      logger.debug(`[creem] Portal: customer=${customerId}`);
 
       const portal = await creem.customers.generateBillingLinks({
         customerId,

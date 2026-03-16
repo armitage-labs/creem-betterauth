@@ -1,7 +1,4 @@
-import type {
-  CustomerRequestEntity,
-  CustomFieldRequestEntity,
-} from "creem/models/components";
+import type { CustomerRequestEntity, CustomFieldRequestEntity } from "creem/models/components";
 
 /**
  * Customer information for checkout.
@@ -128,7 +125,7 @@ export interface CreateCheckoutInput {
 
   /**
    * @deprecated Use `customFields` instead.
-   */  customField?: CustomFieldRequestEntity[];
+   */ customField?: CustomFieldRequestEntity[];
 
   /**
    * URL to redirect to after successful checkout.

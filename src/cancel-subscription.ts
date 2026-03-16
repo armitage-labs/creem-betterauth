@@ -97,10 +97,14 @@ const createCancelSubscriptionHandler = (creem: Creem, options: CreemOptions) =>
         }
         try {
           const sub = await creem.subscriptions.get(subscriptionId);
-          const subCustomerId = typeof sub.customer === "object" ? sub.customer.id : (sub.customer as string);
+          const subCustomerId =
+            typeof sub.customer === "object" ? sub.customer.id : (sub.customer as string);
           const metadataRef = (sub as any).metadata?.referenceId as string | undefined;
           if (subCustomerId !== session.user.creemCustomerId && metadataRef !== session.user.id) {
-            return ctx.json({ error: "Subscription does not belong to the authenticated user" }, { status: 403 });
+            return ctx.json(
+              { error: "Subscription does not belong to the authenticated user" },
+              { status: 403 },
+            );
           }
         } catch (err) {
           return ctx.json({ error: "Subscription not found" }, { status: 404 });

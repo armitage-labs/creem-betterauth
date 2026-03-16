@@ -115,9 +115,7 @@ export {
  * ```
  */
 export const creem = <T extends CreemOptions>(options: T) => {
-  const serverURL = options.testMode
-    ? "https://test-api.creem.io"
-    : "https://api.creem.io";
+  const serverURL = options.testMode ? "https://test-api.creem.io" : "https://api.creem.io";
 
   const creem = new Creem({
     apiKey: options.apiKey,

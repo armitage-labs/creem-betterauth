@@ -48,8 +48,15 @@ const createSearchTransactionsHandler = (creem: Creem, options: CreemOptions) =>
 
       // If the caller supplied an explicit customerId, ensure it belongs to the
       // authenticated user.
-      if (body.customerId && session.user?.creemCustomerId && body.customerId !== session.user.creemCustomerId) {
-        return ctx.json({ error: "Provided customerId does not match authenticated user" }, { status: 403 });
+      if (
+        body.customerId &&
+        session.user?.creemCustomerId &&
+        body.customerId !== session.user.creemCustomerId
+      ) {
+        return ctx.json(
+          { error: "Provided customerId does not match authenticated user" },
+          { status: 403 },
+        );
       }
 
       if (!customerId) {

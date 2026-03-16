@@ -152,15 +152,15 @@ export interface CreemOptions {
    *
    * @example
    * onCheckoutCompleted: async (ctx, { webhookEventType, product, customer, order, subscription }) => {
-  *   // ctx is the BetterAuth endpoint context, useful for logging/response
-  *   console.log(`Checkout completed: ${customer?.email} purchased ${product.name}`);
-  * }
-  *
-  * @migration Previous signature: `onCheckoutCompleted(data)`; new form is `(ctx, data)`.
+   *   // ctx is the BetterAuth endpoint context, useful for logging/response
+   *   console.log(`Checkout completed: ${customer?.email} purchased ${product.name}`);
+   * }
+   *
+   * @migration Previous signature: `onCheckoutCompleted(data)`; new form is `(ctx, data)`.
    */
   onCheckoutCompleted?: (
     ctx: GenericEndpointContext,
-    data: FlatCheckoutCompleted
+    data: FlatCheckoutCompleted,
   ) => void | Promise<void>;
 
   /**
@@ -169,10 +169,7 @@ export interface CreemOptions {
    *
    * @migration Previous signature: `onRefundCreated(data)`; new form is `(ctx, data)`.
    */
-  onRefundCreated?: (
-    ctx: GenericEndpointContext,
-    data: FlatRefundCreated
-  ) => void | Promise<void>;
+  onRefundCreated?: (ctx: GenericEndpointContext, data: FlatRefundCreated) => void | Promise<void>;
 
   /**
    * Called when a dispute is created.
@@ -182,7 +179,7 @@ export interface CreemOptions {
    */
   onDisputeCreated?: (
     ctx: GenericEndpointContext,
-    data: FlatDisputeCreated
+    data: FlatDisputeCreated,
   ) => void | Promise<void>;
 
   /**
@@ -199,7 +196,7 @@ export interface CreemOptions {
    */
   onSubscriptionActive?: (
     ctx: GenericEndpointContext,
-    data: FlatSubscriptionEvent<"subscription.active">
+    data: FlatSubscriptionEvent<"subscription.active">,
   ) => void | Promise<void>;
 
   /**
@@ -210,7 +207,7 @@ export interface CreemOptions {
    */
   onSubscriptionTrialing?: (
     ctx: GenericEndpointContext,
-    data: FlatSubscriptionEvent<"subscription.trialing">
+    data: FlatSubscriptionEvent<"subscription.trialing">,
   ) => void | Promise<void>;
 
   /**
@@ -221,7 +218,7 @@ export interface CreemOptions {
    */
   onSubscriptionCanceled?: (
     ctx: GenericEndpointContext,
-    data: FlatSubscriptionEvent<"subscription.canceled">
+    data: FlatSubscriptionEvent<"subscription.canceled">,
   ) => void | Promise<void>;
 
   /**
@@ -230,7 +227,7 @@ export interface CreemOptions {
    */
   onSubscriptionPaid?: (
     ctx: GenericEndpointContext,
-    data: FlatSubscriptionEvent<"subscription.paid">
+    data: FlatSubscriptionEvent<"subscription.paid">,
   ) => void | Promise<void>;
 
   /**
@@ -239,7 +236,7 @@ export interface CreemOptions {
    */
   onSubscriptionExpired?: (
     ctx: GenericEndpointContext,
-    data: FlatSubscriptionEvent<"subscription.expired">
+    data: FlatSubscriptionEvent<"subscription.expired">,
   ) => void | Promise<void>;
 
   /**
@@ -248,7 +245,7 @@ export interface CreemOptions {
    */
   onSubscriptionUnpaid?: (
     ctx: GenericEndpointContext,
-    data: FlatSubscriptionEvent<"subscription.unpaid">
+    data: FlatSubscriptionEvent<"subscription.unpaid">,
   ) => void | Promise<void>;
 
   /**
@@ -257,7 +254,7 @@ export interface CreemOptions {
    */
   onSubscriptionUpdate?: (
     ctx: GenericEndpointContext,
-    data: FlatSubscriptionEvent<"subscription.update">
+    data: FlatSubscriptionEvent<"subscription.update">,
   ) => void | Promise<void>;
 
   /**
@@ -266,7 +263,7 @@ export interface CreemOptions {
    */
   onSubscriptionPastDue?: (
     ctx: GenericEndpointContext,
-    data: FlatSubscriptionEvent<"subscription.past_due">
+    data: FlatSubscriptionEvent<"subscription.past_due">,
   ) => void | Promise<void>;
 
   /**
@@ -275,7 +272,7 @@ export interface CreemOptions {
    */
   onSubscriptionPaused?: (
     ctx: GenericEndpointContext,
-    data: FlatSubscriptionEvent<"subscription.paused">
+    data: FlatSubscriptionEvent<"subscription.paused">,
   ) => void | Promise<void>;
 
   /**
@@ -295,10 +292,7 @@ export interface CreemOptions {
    *   // Your database logic here
    * }
    */
-  onGrantAccess?: (
-    ctx: GenericEndpointContext,
-    data: GrantAccessContext
-  ) => void | Promise<void>;
+  onGrantAccess?: (ctx: GenericEndpointContext, data: GrantAccessContext) => void | Promise<void>;
 
   /**
    * Called when a user's access should be revoked.
@@ -317,8 +311,5 @@ export interface CreemOptions {
    *   // Your database logic here
    * }
    */
-  onRevokeAccess?: (
-    ctx: GenericEndpointContext,
-    data: RevokeAccessContext
-  ) => void | Promise<void>;
+  onRevokeAccess?: (ctx: GenericEndpointContext, data: RevokeAccessContext) => void | Promise<void>;
 }
