@@ -1,5 +1,16 @@
 # @creem_io/better-auth
 
+> [!WARNING]
+> **This repository is deprecated and no longer maintained.**
+>
+> Active development of `@creem_io/better-auth` has moved to the Creem monorepo:
+>
+> **👉 https://github.com/armitage-labs/creem/tree/main/packages/better-auth**
+>
+> Please open issues, pull requests, and discussions there. This repository will be archived soon.
+
+---
+
 Official Creem Better-Auth plugin for seamless payments and subscription management.
 
 ## ✨ Features
