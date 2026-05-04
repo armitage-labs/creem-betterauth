@@ -1,11 +1,10 @@
+import type { CustomerRequestEntity, CustomFieldRequestEntity } from "creem/models/components";
+
 /**
  * Customer information for checkout.
  * If not provided, the authenticated user's email will be used automatically.
  */
-export interface CheckoutCustomer {
-  /** Customer email address */
-  email?: string;
-}
+export type CheckoutCustomer = CustomerRequestEntity;
 
 /**
  * Configuration for a text custom field.
@@ -122,12 +121,11 @@ export interface CreateCheckoutInput {
    * ]
    * ```
    */
-  customFields?: CustomFieldInput[];
+  customFields?: CustomFieldRequestEntity[];
 
   /**
    * @deprecated Use `customFields` instead.
-   */
-  customField?: CustomFieldInput[];
+   */ customField?: CustomFieldRequestEntity[];
 
   /**
    * URL to redirect to after successful checkout.
@@ -145,6 +143,12 @@ export interface CreateCheckoutInput {
    * @example { orderId: "12345", source: "web" }
    */
   metadata?: Record<string, unknown>;
+
+  /**
+   * Indicates whether the client should redirect to the returned checkout URL.
+   * Defaults to false.
+   */
+  redirect?: boolean;
 }
 
 /**

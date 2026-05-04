@@ -1,3 +1,8 @@
+import type {
+  TransactionEntity$Outbound,
+  TransactionListEntity$Outbound,
+} from "creem/models/components";
+
 /**
  * Parameters for searching Creem transactions.
  *
@@ -56,82 +61,9 @@ export interface SearchTransactionsInput {
 /**
  * A single transaction object from Creem.
  */
-export interface TransactionData {
-  /** Unique transaction identifier */
-  id: string;
-  /** Environment mode */
-  mode: "test" | "prod" | "sandbox";
-  /** String representing the object's type */
-  object: "transaction";
-  /** The transaction amount in cents. 1000 = $10.00 */
-  amount: number;
-  /** The amount the customer paid in cents. 1000 = $10.00 */
-  amountPaid?: number;
-  /** The discount amount in cents. 1000 = $10.00 */
-  discountAmount?: number;
-  /** Three-letter ISO currency code, in uppercase */
-  currency: string;
-  /** The type of transaction: payment (one time) or invoice (subscription) */
-  type: "payment" | "invoice";
-  /** The ISO alpha-2 country code where tax is collected */
-  taxCountry?: string;
-  /** The sale tax amount in cents. 1000 = $10.00 */
-  taxAmount?: number;
-  /** Status of the transaction */
-  status:
-    | "pending"
-    | "paid"
-    | "refunded"
-    | "partialRefund"
-    | "chargedBack"
-    | "uncollectible"
-    | "declined"
-    | "void";
-  /** The amount that has been refunded in cents. 1000 = $10.00 */
-  refundedAmount?: number | null;
-  /** The order ID associated with the transaction */
-  order?: string;
-  /** The subscription ID associated with the transaction */
-  subscription?: string;
-  /** The customer ID associated with the transaction */
-  customer?: string;
-  /** The description of the transaction */
-  description?: string;
-  /** Start period for the invoice as timestamp */
-  periodStart?: number;
-  /** End period for the invoice as timestamp */
-  periodEnd?: number;
-  /** Creation date of the transaction as timestamp */
-  createdAt: number;
-}
-
-/**
- * Pagination details from Creem API.
- */
-export interface TransactionPagination {
-  /** Total number of records matching the query */
-  totalRecords: number;
-  /** Total number of pages available */
-  totalPages: number;
-  /** The current page number */
-  currentPage: number;
-  /** The next page number, or null if there is no next page */
-  nextPage: number | null;
-  /** The previous page number, or null if there is no previous page */
-  prevPage: number | null;
-}
+export type TransactionData = TransactionEntity$Outbound;
 
 /**
  * Response from searching transactions.
  */
-export interface SearchTransactionsResponse {
-  /**
-   * Array of transaction objects
-   */
-  items: TransactionData[];
-
-  /**
-   * Pagination details
-   */
-  pagination: TransactionPagination;
-}
+export type SearchTransactionsResponse = TransactionListEntity$Outbound;

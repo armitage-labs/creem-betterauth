@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { CreemOptions } from "./types.js";
 import { resolveSuccessUrl } from "./utils.js";
 import type { CreateCheckoutInput, CreateCheckoutResponse } from "./checkout-types.js";
+import type { CustomerRequestEntity } from "creem/models/components";
 
 const CustomFieldInputSchema = z.object({
   type: z.enum(["text", "checkbox"]),
@@ -22,13 +23,15 @@ export const CheckoutParams = z.object({
   discountCode: z.string().optional(),
   customer: z
     .object({
-      email: z.string().email().optional(),
+      id: z.string().optional(),
+      email: z.email().optional(),
     })
     .optional(),
   customFields: z.array(CustomFieldInputSchema).max(3).optional(),
   customField: z.array(CustomFieldInputSchema).max(3).optional(),
   successUrl: z.string().optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
+  redirect: z.boolean().optional().prefault(false).default(false),
 });
 
 export type CheckoutParams = z.infer<typeof CheckoutParams>;
@@ -88,6 +91,27 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
     try {
       const session = await getSessionFromCtx(ctx);
 
+      // ownership validation – body.customer.id may be supplied by clients
+      // (some examples permit it), but we must never trust an arbitrary value.
+      // If an explicit ID is provided it has to match the ID stored on the
+      // session.  If the session has no creemCustomerId we reject because we
+      // can't verify ownership.
+      if (body.customer?.id) {
+        if (session?.user?.creemCustomerId) {
+          if (body.customer.id !== session.user.creemCustomerId) {
+            return ctx.json(
+              { error: "Provided customer ID does not match session" },
+              { status: 400 },
+            );
+          }
+        } else {
+          return ctx.json(
+            { error: "Cannot supply a customer ID without a session value" },
+            { status: 400 },
+          );
+        }
+      }
+
       logger.debug(
         `[creem] Checkout: user=${session?.user?.id || "anonymous"}, product=${body.productId}`,
       );
@@ -103,23 +127,29 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
         }
       }
 
-      const customFields = body.customFields ?? body.customField;
+      // prefer the customer ID from the session (validation above guarantees
+      // a provided ID is safe).
+      const id = session?.user?.creemCustomerId || body.customer?.id;
+      // prefer the email from the body over the session
+      const email = body.customer?.email || session?.user?.email;
+
+      let customer: CustomerRequestEntity | undefined;
+
+      // prefer using the creem customer ID over email
+      if (id) {
+        customer ??= { id };
+      } else if (email) {
+        customer ??= { email };
+      }
 
       const checkout = await creem.checkouts.create({
         productId: body.productId,
         requestId: body.requestId,
         units: body.units,
         discountCode: body.discountCode,
-        customer: body.customer?.email
-          ? {
-              email: body.customer.email,
-            }
-          : session?.user?.email
-            ? {
-                email: session.user.email,
-              }
-            : undefined,
-        customFields,
+        customer,
+        // Prefer the newer `customFields` field, but support the deprecated `customField` too.
+        customFields: body.customFields ?? body.customField,
         successUrl: resolveSuccessUrl(body.successUrl || options.defaultSuccessUrl, ctx),
         metadata: {
           ...(body.metadata || {}),
@@ -138,7 +168,7 @@ const createCheckoutHandler = (creem: Creem, options: CreemOptions) => {
 
       return ctx.json({
         url: checkout.checkoutUrl,
-        redirect: true,
+        redirect: !!body.redirect,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

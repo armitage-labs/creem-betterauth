@@ -87,10 +87,10 @@ test/nextjs-app/
 creem({
   apiKey: process.env.CREEM_API_KEY!,
   testMode: true,
-  onGrantAccess: async (context) => {
+  onGrantAccess: async (ctx, data) => {
     // Handle subscription activation
   },
-  onRevokeAccess: async (context) => {
+  onRevokeAccess: async (ctx, data) => {
     // Handle subscription cancellation
   }
 })
