@@ -475,7 +475,9 @@ if (isActiveSubscription(subscription.status)) {
 }
 
 // Format Creem timestamps
-const renewalDate = formatCreemDate(subscription.next_billing_date);
+// breaking change: field was renamed from `next_billing_date` to
+// `next_transaction_date` in a recent release.
+const renewalDate = formatCreemDate(subscription.next_transaction_date);
 console.log(renewalDate.toLocaleDateString());
 
 // Calculate days until renewal
@@ -496,7 +498,7 @@ creem({
   apiKey: process.env.CREEM_API_KEY!,
   webhookSecret: process.env.CREEM_WEBHOOK_SECRET!,
 
-  onCheckoutCompleted: async (data) => {
+  onCheckoutCompleted: async (ctx, data) => {
     const { customer, product, order, webhookEventType } = data;
     console.log(`${customer.email} purchased ${product.name}`);
     
@@ -504,28 +506,28 @@ creem({
     await sendThankYouEmail(customer.email);
   },
 
-  onSubscriptionActive: async (data) => {
+  onSubscriptionActive: async (ctx, data) => {
     const { customer, product, status } = data;
     // Handle active subscription
   },
 
-  onSubscriptionTrialing: async (data) => {
+  onSubscriptionTrialing: async (ctx, data) => {
     // Handle trial period
   },
 
-  onSubscriptionCanceled: async (data) => {
+  onSubscriptionCanceled: async (ctx, data) => {
     // Handle cancellation
   },
 
-  onSubscriptionExpired: async (data) => {
+  onSubscriptionExpired: async (ctx, data) => {
     // Handle expiration
   },
 
-  onRefundCreated: async (data) => {
+  onRefundCreated: async (ctx, data) => {
     // Handle refunds
   },
 
-  onDisputeCreated: async (data) => {
+  onDisputeCreated: async (ctx, data) => {
     // Handle disputes
   },
 });
@@ -541,7 +543,7 @@ creem({
   webhookSecret: process.env.CREEM_WEBHOOK_SECRET!,
 
   // Triggered for: active, trialing, and paid subscriptions
-  onGrantAccess: async ({ reason, product, customer, metadata }) => {
+  onGrantAccess: async (ctx, { reason, product, customer, metadata }) => {
     const userId = metadata?.referenceId as string;
 
     await db.user.update({
@@ -557,7 +559,7 @@ creem({
   },
 
   // Triggered for: paused, expired, and canceled subscriptions considering current date and billing period end
-  onRevokeAccess: async ({ reason, product, customer, metadata }) => {
+  onRevokeAccess: async (ctx, { reason, product, customer, metadata }) => {
     const userId = metadata?.referenceId as string;
 
     await db.user.update({
@@ -635,18 +637,18 @@ interface CreemOptions {
   persistSubscriptions?: boolean;
 
   // Event-Specific Webhook Handlers
-  onCheckoutCompleted?: (data: FlatCheckoutCompleted) => void | Promise<void>;
-  onRefundCreated?: (data: FlatRefundCreated) => void | Promise<void>;
-  onDisputeCreated?: (data: FlatDisputeCreated) => void | Promise<void>;
-  onSubscriptionActive?: (data: FlatSubscriptionEvent) => void | Promise<void>;
-  onSubscriptionTrialing?: (data: FlatSubscriptionEvent) => void | Promise<void>;
-  onSubscriptionCanceled?: (data: FlatSubscriptionEvent) => void | Promise<void>;
-  onSubscriptionPaid?: (data: FlatSubscriptionEvent) => void | Promise<void>;
-  onSubscriptionExpired?: (data: FlatSubscriptionEvent) => void | Promise<void>;
-  onSubscriptionUnpaid?: (data: FlatSubscriptionEvent) => void | Promise<void>;
-  onSubscriptionUpdate?: (data: FlatSubscriptionEvent) => void | Promise<void>;
-  onSubscriptionPastDue?: (data: FlatSubscriptionEvent) => void | Promise<void>;
-  onSubscriptionPaused?: (data: FlatSubscriptionEvent) => void | Promise<void>;
+  onCheckoutCompleted?: (ctx: GenericEndpointContext, data: FlatCheckoutCompleted) => void | Promise<void>;
+  onRefundCreated?: (ctx: GenericEndpointContext, data: FlatRefundCreated) => void | Promise<void>;
+  onDisputeCreated?: (ctx: GenericEndpointContext, data: FlatDisputeCreated) => void | Promise<void>;
+  onSubscriptionActive?: (ctx: GenericEndpointContext, data: FlatSubscriptionEvent) => void | Promise<void>;
+  onSubscriptionTrialing?: (ctx: GenericEndpointContext, data: FlatSubscriptionEvent) => void | Promise<void>;
+  onSubscriptionCanceled?: (ctx: GenericEndpointContext, data: FlatSubscriptionEvent) => void | Promise<void>;
+  onSubscriptionPaid?: (ctx: GenericEndpointContext, data: FlatSubscriptionEvent) => void | Promise<void>;
+  onSubscriptionExpired?: (ctx: GenericEndpointContext, data: FlatSubscriptionEvent) => void | Promise<void>;
+  onSubscriptionUnpaid?: (ctx: GenericEndpointContext, data: FlatSubscriptionEvent) => void | Promise<void>;
+  onSubscriptionUpdate?: (ctx: GenericEndpointContext, data: FlatSubscriptionEvent) => void | Promise<void>;
+  onSubscriptionPastDue?: (ctx: GenericEndpointContext, data: FlatSubscriptionEvent) => void | Promise<void>;
+  onSubscriptionPaused?: (ctx: GenericEndpointContext, data: FlatSubscriptionEvent) => void | Promise<void>;
 
   // Access Control Handlers (High-level)
   onGrantAccess?: (context: GrantAccessContext) => void | Promise<void>;

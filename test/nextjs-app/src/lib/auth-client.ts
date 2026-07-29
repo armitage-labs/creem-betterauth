@@ -1,7 +1,7 @@
 "use client";
 
-import { createCreemAuthClient } from "../../../../dist/esm/create-creem-auth-client";
-import { creemClient } from "../../../../dist/esm/client";
+import { createCreemAuthClient } from "@creem_io/better-auth/create-creem-auth-client";
+import { creemClient } from "@creem_io/better-auth/client";
 
 export const authClient = createCreemAuthClient({
   baseURL: typeof window !== "undefined" 

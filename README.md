@@ -143,13 +143,13 @@ export const auth = betterAuth({
       persistSubscriptions: true, // Enable database persistence (default: true)
 
       // Optional: Webhook handlers
-      onGrantAccess: async ({ customer, product, metadata, reason }) => {
+      onGrantAccess: async (ctx, { customer, product, metadata, reason }) => {
         const userId = metadata?.referenceId as string;
         console.log(`Granting access (${reason}) to ${customer.email}`);
         // Update your database to grant access
       },
 
-      onRevokeAccess: async ({ customer, product, metadata, reason }) => {
+      onRevokeAccess: async (ctx, { customer, product, metadata, reason }) => {
         const userId = metadata?.referenceId as string;
         console.log(`Revoking access (${reason}) from ${customer.email}`);
         // Update your database to revoke access
@@ -569,7 +569,9 @@ if (isActiveSubscription(subscription.status)) {
 }
 
 // Format Creem timestamps
-const renewalDate = formatCreemDate(subscription.next_billing_date);
+// breaking change: the `next_billing_date` field has been renamed to
+// `next_transaction_date`.
+const renewalDate = formatCreemDate(subscription.next_transaction_date);
 console.log(renewalDate.toLocaleDateString());
 
 // Calculate days until renewal
@@ -718,7 +720,7 @@ creem({
   apiKey: process.env.CREEM_API_KEY!,
   webhookSecret: process.env.CREEM_WEBHOOK_SECRET!,
 
-  onCheckoutCompleted: async (data) => {
+  onCheckoutCompleted: async (ctx, data) => {
     const {
       webhookEventType, // "checkout.completed"
       webhookId,
@@ -731,7 +733,7 @@ creem({
     console.log(`${customer.email} purchased ${product.name}`);
   },
 
-  onSubscriptionActive: async (data) => {
+  onSubscriptionActive: async (ctx, data) => {
     const { product, customer, status } = data;
     // Handle active subscription
   },
@@ -748,7 +750,7 @@ creem({
   webhookSecret: process.env.CREEM_WEBHOOK_SECRET!,
 
   // Triggered for: active, trialing, and paid subscriptions
-  onGrantAccess: async ({ reason, product, customer, metadata }) => {
+  onGrantAccess: async (ctx, { reason, product, customer, metadata }) => {
     const userId = metadata?.referenceId as string;
 
     await db.user.update({
@@ -760,7 +762,7 @@ creem({
   },
 
   // Triggered for: paused, expired, and canceled subscriptions considering current date and billing period end
-  onRevokeAccess: async ({ reason, product, customer, metadata }) => {
+  onRevokeAccess: async (ctx, { reason, product, customer, metadata }) => {
     const userId = metadata?.referenceId as string;
 
     await db.user.update({
@@ -806,35 +808,44 @@ interface CreemOptions {
   persistSubscriptions?: boolean;
 
   // Webhook Handlers
-  onCheckoutCompleted?: (data: FlatCheckoutCompleted) => void; // Great for One Time Payments
-  onRefundCreated?: (data: FlatRefundCreated) => void;
-  onDisputeCreated?: (data: FlatDisputeCreated) => void;
+  onCheckoutCompleted?: (ctx: GenericEndpointContext, data: FlatCheckoutCompleted) => void; // Great for One Time Payments
+  onRefundCreated?: (ctx: GenericEndpointContext, data: FlatRefundCreated) => void;
+  onDisputeCreated?: (ctx: GenericEndpointContext, data: FlatDisputeCreated) => void;
   onSubscriptionActive?: (
-    data: FlatSubscriptionEvent<"subscription.active">,
+    ctx: GenericEndpointContext,
+    data: FlatSubscriptionEvent<"subscription.active">
   ) => void;
   onSubscriptionTrialing?: (
-    data: FlatSubscriptionEvent<"subscription.trialing">,
+    ctx: GenericEndpointContext,
+    data: FlatSubscriptionEvent<"subscription.trialing">
   ) => void;
   onSubscriptionCanceled?: (
-    data: FlatSubscriptionEvent<"subscription.canceled">,
+    ctx: GenericEndpointContext,
+    data: FlatSubscriptionEvent<"subscription.canceled">
   ) => void;
   onSubscriptionPaid?: (
-    data: FlatSubscriptionEvent<"subscription.paid">,
+    ctx: GenericEndpointContext,
+    data: FlatSubscriptionEvent<"subscription.paid">
   ) => void;
   onSubscriptionExpired?: (
-    data: FlatSubscriptionEvent<"subscription.expired">,
+    ctx: GenericEndpointContext,
+    data: FlatSubscriptionEvent<"subscription.expired">
   ) => void;
   onSubscriptionUnpaid?: (
-    data: FlatSubscriptionEvent<"subscription.unpaid">,
+    ctx: GenericEndpointContext,
+    data: FlatSubscriptionEvent<"subscription.unpaid">
   ) => void;
   onSubscriptionUpdate?: (
-    data: FlatSubscriptionEvent<"subscription.update">,
+    ctx: GenericEndpointContext,
+    data: FlatSubscriptionEvent<"subscription.update">
   ) => void;
   onSubscriptionPastDue?: (
-    data: FlatSubscriptionEvent<"subscription.past_due">,
+    ctx: GenericEndpointContext,
+    data: FlatSubscriptionEvent<"subscription.past_due">
   ) => void;
   onSubscriptionPaused?: (
-    data: FlatSubscriptionEvent<"subscription.paused">,
+    ctx: GenericEndpointContext,
+    data: FlatSubscriptionEvent<"subscription.paused">
   ) => void;
 
   // Access Control (High-level)

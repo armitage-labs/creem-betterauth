@@ -1,5 +1,5 @@
 import { betterAuth } from "better-auth";
-import { creem } from "../../../../dist/esm/index";
+import { creem } from "@creem_io/better-auth";
 import Database from "better-sqlite3";
 import { Kysely, SqliteDialect } from "kysely";
 import path from "path";
@@ -32,12 +32,12 @@ if (hasValidCreemApiKey) {
       webhookSecret: process.env.CREEM_WEBHOOK_SECRET,
       
       // Grant access when subscription is created or updated
-      onGrantAccess: async (context) => {
+      onGrantAccess: async (_ctx, data) => {
         console.log("🎉 Granting access to user:", {
-          customerEmail: context.customer.email,
-          productId: context.product.id,
-          reason: context.reason,
-          metadata: context.metadata,
+          customerEmail: data.customer.email,
+          productId: data.product.id,
+          reason: data.reason,
+          metadata: data.metadata,
         });
         
         // Here you would typically:
@@ -56,12 +56,12 @@ if (hasValidCreemApiKey) {
       },
       
       // Revoke access when subscription ends or is cancelled
-      onRevokeAccess: async (context) => {
+      onRevokeAccess: async (_ctx, data) => {
         console.log("🚫 Revoking access from user:", {
-          customerEmail: context.customer.email,
-          productId: context.product.id,
-          reason: context.reason,
-          metadata: context.metadata,
+          customerEmail: data.customer.email,
+          productId: data.product.id,
+          reason: data.reason,
+          metadata: data.metadata,
         });
         
         // Here you would typically:

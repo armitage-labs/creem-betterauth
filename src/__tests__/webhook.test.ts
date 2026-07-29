@@ -122,9 +122,16 @@ describe("webhook handler", () => {
       created_at: 1234567890,
       object: mockCheckout,
     };
-    await callWebhook(options, event);
+    const ctx = await callWebhook(options, event);
     expect(hooks.onCheckoutCompleted).toHaveBeenCalled();
-    expect(onCheckoutCompleted).toHaveBeenCalled();
+    expect(onCheckoutCompleted).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({
+        webhookEventType: "checkout.completed",
+        webhookId: "e1",
+        id: mockCheckout.id,
+      }),
+    );
   });
 
   it("routes subscription.active to hook and fires onGrantAccess", async () => {
@@ -140,6 +147,7 @@ describe("webhook handler", () => {
     await callWebhook(options, event);
     expect(hooks.onSubscriptionActive).toHaveBeenCalled();
     expect(onGrantAccess).toHaveBeenCalledWith(
+      expect.anything(),
       expect.objectContaining({ reason: "subscription_active" }),
     );
     expect(onSubscriptionActive).toHaveBeenCalled();
@@ -157,6 +165,7 @@ describe("webhook handler", () => {
     await callWebhook(options, event);
     expect(hooks.onSubscriptionTrialing).toHaveBeenCalled();
     expect(onGrantAccess).toHaveBeenCalledWith(
+      expect.anything(),
       expect.objectContaining({ reason: "subscription_trialing" }),
     );
   });
@@ -173,6 +182,7 @@ describe("webhook handler", () => {
     await callWebhook(options, event);
     expect(hooks.onSubscriptionPaid).toHaveBeenCalled();
     expect(onGrantAccess).toHaveBeenCalledWith(
+      expect.anything(),
       expect.objectContaining({ reason: "subscription_paid" }),
     );
   });
@@ -189,6 +199,7 @@ describe("webhook handler", () => {
     await callWebhook(options, event);
     expect(hooks.onSubscriptionExpired).toHaveBeenCalled();
     expect(onRevokeAccess).toHaveBeenCalledWith(
+      expect.anything(),
       expect.objectContaining({ reason: "subscription_expired" }),
     );
   });
@@ -205,6 +216,7 @@ describe("webhook handler", () => {
     await callWebhook(options, event);
     expect(hooks.onSubscriptionPaused).toHaveBeenCalled();
     expect(onRevokeAccess).toHaveBeenCalledWith(
+      expect.anything(),
       expect.objectContaining({ reason: "subscription_paused" }),
     );
   });
@@ -218,9 +230,17 @@ describe("webhook handler", () => {
       created_at: 1234567890,
       object: { ...mockSubscription, status: "canceled" },
     };
-    await callWebhook(options, event);
+    const ctx = await callWebhook(options, event);
     expect(hooks.onSubscriptionCanceled).toHaveBeenCalled();
-    expect(onSubscriptionCanceled).toHaveBeenCalled();
+    expect(onSubscriptionCanceled).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({
+        webhookEventType: "subscription.canceled",
+        webhookId: "e1",
+        id: mockSubscription.id,
+        status: "canceled",
+      }),
+    );
   });
 
   it("routes subscription.unpaid to hook", async () => {
@@ -265,8 +285,15 @@ describe("webhook handler", () => {
       created_at: 1234567890,
       object: mockRefund,
     };
-    await callWebhook(options, event);
-    expect(onRefundCreated).toHaveBeenCalled();
+    const ctx = await callWebhook(options, event);
+    expect(onRefundCreated).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({
+        webhookEventType: "refund.created",
+        webhookId: "e1",
+        id: mockRefund.id,
+      }),
+    );
   });
 
   it("routes dispute.created to callback", async () => {

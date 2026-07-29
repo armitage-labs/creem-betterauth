@@ -77,6 +77,28 @@ const createRetrieveSubscriptionHandler = (creem: Creem, options: CreemOptions) 
         );
       }
 
+      // When persistence is disabled, verify the subscription belongs to the
+      // authenticated user via the Creem API.
+      if (!shouldPersist && subscriptionId) {
+        if (!session?.user?.creemCustomerId) {
+          return ctx.json({ error: "User must have a Creem customer ID" }, { status: 400 });
+        }
+        try {
+          const sub = await creem.subscriptions.get(subscriptionId);
+          const subCustomerId =
+            typeof sub.customer === "object" ? sub.customer.id : (sub.customer as string);
+          const metadataRef = (sub as any).metadata?.referenceId as string | undefined;
+          if (subCustomerId !== session.user.creemCustomerId && metadataRef !== session.user.id) {
+            return ctx.json(
+              { error: "Subscription does not belong to the authenticated user" },
+              { status: 403 },
+            );
+          }
+        } catch (err) {
+          return ctx.json({ error: "Subscription not found" }, { status: 404 });
+        }
+      }
+
       logger.debug(`[creem] Retrieving subscription: ${subscriptionId}`);
 
       const subscription = await creem.subscriptions.get(subscriptionId);
@@ -117,7 +139,7 @@ const createRetrieveSubscriptionHandler = (creem: Creem, options: CreemOptions) 
  * if (data) {
  *   console.log(`Status: ${data.status}`);
  *   console.log(`Product: ${data.product.name}`);
- *   console.log(`Period ends: ${data.currentPeriodEndDate}`);
+ *   console.log(`Next billing: ${new Date(data.next_transaction_date)}`);
  * }
  * ```
  *
@@ -131,7 +153,7 @@ const createRetrieveSubscriptionHandler = (creem: Creem, options: CreemOptions) 
  * if (data) {
  *   console.log(`Status: ${data.status}`);
  *   console.log(`Product: ${data.product.name}`);
- *   console.log(`Period ends: ${data.currentPeriodEndDate}`);
+ *   console.log(`Next billing: ${new Date(data.next_transaction_date)}`);
  * }
  * ```
  */

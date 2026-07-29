@@ -1,3 +1,5 @@
+import type { SubscriptionEntity$Outbound } from "creem/models/components";
+
 /**
  * Parameters for retrieving a Creem subscription.
  *
@@ -49,44 +51,8 @@ export interface SubscriptionItemData {
 
 /**
  * Creem subscription object returned from the API.
+ *
+ * @see SubscriptionEntity$Outbound This alias is offered for convenience,
+ * but the original Creem JSDoc is not preserved when the type is re-exported here.
  */
-export interface SubscriptionData {
-  /** Unique subscription identifier */
-  id: string;
-  /** Environment mode */
-  mode: "test" | "prod" | "sandbox";
-  /** Object type */
-  object: "subscription";
-  /** The product associated with the subscription (ID or expanded object) */
-  product:
-    | { id: string; name: string; price: number; currency: string; [key: string]: unknown }
-    | string;
-  /** The customer associated with the subscription (ID or expanded object) */
-  customer: { id: string; email: string; name?: string; [key: string]: unknown } | string;
-  /** Subscription items */
-  items?: SubscriptionItemData[];
-  /** The method used for collecting payments */
-  collectionMethod: "charge_automatically";
-  /** Current subscription status */
-  status: SubscriptionDataStatus;
-  /** The ID of the last paid transaction */
-  lastTransactionId?: string;
-  /** The date of the last paid transaction */
-  lastTransactionDate?: Date;
-  /** The date when the next subscription transaction will be charged */
-  nextTransactionDate?: Date;
-  /** The start date of the current subscription period */
-  currentPeriodStartDate: Date;
-  /** The end date of the current subscription period */
-  currentPeriodEndDate: Date;
-  /** The date when the subscription was canceled, if applicable */
-  canceledAt: Date | null;
-  /** The date when the subscription was created */
-  createdAt: Date;
-  /** The date when the subscription was last updated */
-  updatedAt: Date;
-  /** The discount applied to the subscription */
-  discount?: object;
-  /** Optional metadata */
-  metadata?: Record<string, string | number | null>;
-}
+export type SubscriptionData = SubscriptionEntity$Outbound;
